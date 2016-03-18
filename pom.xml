@@ -135,6 +135,7 @@
             com.nimbusds.langtag.*,
             com.nimbusds.jose.*;version="${com.nimbusds.package.import.version.range}",
             com.nimbusds.jwt.*;version="${com.nimbusds.package.import.version.range}",
+            org.apache.commons.*,
         </import.package>
 
         <osgi.framework.import.version.range>[1.8.0, 2.0.0)</osgi.framework.import.version.range>
