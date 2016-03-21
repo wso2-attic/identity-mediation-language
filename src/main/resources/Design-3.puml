@@ -1,0 +1,52 @@
+@startuml
+
+participant user_agent
+participant service_provider
+participant listener
+participant sp_sequence
+participant "oidc_fidp" as fidp
+
+user_agent -> service_provider : Access resource
+service_provider -> user_agent : Redirects to bus\nwith SAML login request
+user_agent -> listener : Follows redirect with SAML login request
+hnote over listener : sp identifier
+listener -> sp_sequence : SAML login request
+
+hnote over sp_sequence : SAML request processor
+hnote over sp_sequence : OIDC request builder
+hnote over sp_sequence : JSON response builder
+
+
+note left of sp_sequence
+{
+HEADERS:,
+STATUS:,
+PAYLOAD:
+}
+end note
+
+sp_sequence -> listener : JSON response
+hnote over listener : JSON response parser
+
+listener -> user_agent : Redirects to FIDP's  /authorize endpoint
+user_agent -> fidp : Follows redirect: GET /authorize [Implicit]
+
+fidp -> user_agent : Redirects to bus with ID token
+user_agent -> listener : Follows redirect with ID token
+
+hnote over listener : sp identifier
+listener -> sp_sequence : ID token
+
+hnote over sp_sequence : OIDC response processor
+hnote over sp_sequence : SAML request builder
+hnote over sp_sequence : JSON response builder
+
+sp_sequence -> listener : JSON response
+
+hnote over listener : JSON response processor
+
+listener -> user_agent : SAML response in HTML form
+user_agent -> service_provider : POST SAML response
+service_provider -> user_agent : Supply resource
+
+@enduml

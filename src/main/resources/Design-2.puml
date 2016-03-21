@@ -1,0 +1,51 @@
+@startuml
+
+participant user_agent
+participant service_provider
+participant "http_inbound:\n/travelocity" as http_inbound_travelocity
+participant "sequence:\ntravelocity" as sequence_1
+participant oidc_fidp
+
+note over http_inbound_travelocity
+[host]:[port]/travelocity
+This is a service provider specific endpoint
+for inbound request and callbacks
+end note
+
+user_agent -> service_provider : Access resource
+service_provider -> user_agent : Redirects to bus\nwith SAML login request
+user_agent -> http_inbound_travelocity : Follows redirect with SAML login request
+http_inbound_travelocity -> sequence_1 : SAML login request
+
+hnote over sequence_1 : filter
+
+note over sequence_1
+Filter checks <b>Referer</b> header
+to identify the SP's request.
+<font color=red>Should change to a payload
+<font color=red>based filter
+end note
+
+alt request from SP
+
+hnote over sequence_1 : SAML request process
+hnote over sequence_1 : OIDC request build
+
+sequence_1 -> http_inbound_travelocity : Redirects to IDP
+http_inbound_travelocity -> user_agent : Redirects to IDP
+user_agent -> oidc_fidp : Follows redirect: GET /authorize [Implicit]
+
+else request from IDP
+
+oidc_fidp -> http_inbound_travelocity : ID token
+http_inbound_travelocity -> sequence_1 : ID token
+
+hnote over sequence_1 : OIDC response process
+hnote over sequence_1 : SAML response build
+
+sequence_1 -> http_inbound_travelocity : SAML response
+http_inbound_travelocity -> user_agent : SAML response
+
+end
+
+@enduml
