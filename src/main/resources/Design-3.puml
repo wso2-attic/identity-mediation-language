@@ -16,7 +16,6 @@ hnote over sp_sequence : SAML request processor
 hnote over sp_sequence : OIDC request builder
 hnote over sp_sequence : JSON response builder
 
-
 note left of sp_sequence
 {
 HEADERS:,
