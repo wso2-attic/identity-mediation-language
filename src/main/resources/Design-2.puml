@@ -15,16 +15,14 @@ end note
 user_agent -> http_inbound_travelocity : Inbound request
 http_inbound_travelocity -> sequence_1 : Inbound request
 
-hnote over sequence_1 : filter
-
 note over sequence_1
-Filter checks <b>Referer</b> header
+A filter checks <b>Referer</b> header
 to identify the SP's request.
 <font color=red>Should change to a payload
 <font color=red>based filter
 end note
 
-alt redirect from SP with SAML login request
+alt condition(source("Referer", Scope.Transport), pattern(".*samlsso.*"))
 
 hnote over sequence_1 : SAML request process
 hnote over sequence_1 : OIDC request build
