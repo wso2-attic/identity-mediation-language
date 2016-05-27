@@ -1,0 +1,25 @@
+@startuml
+participant browser as user_agent
+participant service_provider
+participant identity_bus
+participant oidc_fidp
+
+user_agent -> service_provider : Access resource
+service_provider -> user_agent : Redirects to bus\nwith SAML login request
+user_agent -> identity_bus : Follows redirect with SAML login request
+
+hnote over identity_bus : SAML to OIDC \ntransformation
+
+identity_bus -> user_agent : Redirects to IDP
+user_agent -> oidc_fidp : Follows redirect: GET /authorize [Implicit]
+
+oidc_fidp -> user_agent : Redirects to identity bus with ID token
+user_agent -> identity_bus : Follows redirect with ID token
+
+hnote over identity_bus : OIDC to SAML \ntransformation
+
+identity_bus -> user_agent : SAML response in HTML form
+user_agent -> service_provider : POST SAML response
+service_provider -> user_agent : Supply resource
+
+@enduml
