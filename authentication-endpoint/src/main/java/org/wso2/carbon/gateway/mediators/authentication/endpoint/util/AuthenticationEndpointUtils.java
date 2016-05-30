@@ -17,6 +17,7 @@
 package org.wso2.carbon.gateway.mediators.authentication.endpoint.util;
 
 public class AuthenticationEndpointUtils {
+
     public static final String LOGIN_PAGE =
             "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n" +
             "<html xmlns=\"http://www.w3.org/1999/xhtml\">\n" +
@@ -103,9 +104,9 @@ public class AuthenticationEndpointUtils {
             "    box-shadow: inset 0 1.5px 3px rgba(190, 190, 190, .4), 0 0 0 5px #e6f2f9;\n" +
             "}\n" +
             "#lower {\n" +
-            "    background: #ecf2f5;\n" +
+            "    background: #2B507D;\n" +
             "    width: 100%;\n" +
-            "    height: 69px;\n" +
+            "    height: 64px;\n" +
             "    margin-top: 20px;\n" +
             "\t  box-shadow: inset 0 1px 1px #fff;\n" +
             "    border-top: 1px solid #ccc;\n" +
@@ -131,24 +132,16 @@ public class AuthenticationEndpointUtils {
             "font-size: 14px;\n" +
             "    font-weight: bold;\n" +
             "    color: #fff;\n" +
-            "    background-color: #acd6ef; /*IE fallback*/\n" +
-            "    background-image: -webkit-gradient(linear, left top, left bottom, from(#acd6ef), to(#6ec2e8));\n" +
-            "    background-image: -moz-linear-gradient(top left 90deg, #acd6ef 0%, #6ec2e8 100%);\n" +
-            "    background-image: linear-gradient(top left 90deg, #acd6ef 0%, #6ec2e8 100%);\n" +
-            "    border-radius: 30px;\n" +
-            "    border: 1px solid #66add6;\n" +
-            "    box-shadow: 0 1px 2px rgba(0, 0, 0, .3), inset 0 1px 0 rgba(255, 255, 255, .5);\n" +
+            "    background-color: #F36C0C; /*IE fallback*/\n" +
+            "    border-radius: 5px;\n" +
+            "    border: 1px solid #FFFFFF;\n" +
             "    cursor: pointer;\n" +
             "}\n" +
             "input[type=submit]:hover {\n" +
-            "    background-image: -webkit-gradient(linear, left top, left bottom, from(#b6e2ff), to(#6ec2e8));\n" +
-            "    background-image: -moz-linear-gradient(top left 90deg, #b6e2ff 0%, #6ec2e8 100%);\n" +
-            "    background-image: linear-gradient(top left 90deg, #b6e2ff 0%, #6ec2e8 100%);\n" +
+            "    background-color: #000000;\n" +
             "}\n" +
             "input[type=submit]:active {\n" +
-            "    background-image: -webkit-gradient(linear, left top, left bottom, from(#6ec2e8), to(#b6e2ff));\n" +
-            "    background-image: -moz-linear-gradient(top left 90deg, #6ec2e8 0%, #b6e2ff 100%);\n" +
-            "    background-image: linear-gradient(top left 90deg, #6ec2e8 0%, #b6e2ff 100%);\n" +
+            "    background-color: #F36C0C;\n" +
             "}\n" +
             "</style>\n" +
             "\n" +
@@ -157,7 +150,7 @@ public class AuthenticationEndpointUtils {
             "<body>\n" +
             "    <!-- Begin Page Content -->\n" +
             "    <div id=\"container\">\n" +
-            "        <form method=\"POST\" action=\"http://localhost:8290/authenticate\">\n" +
+            "        <form method=\"POST\" action=\"${callbackURL}\">\n" +
             "            <label for=\"username\">Username:</label>\n" +
             "            <input type=\"text\" id=\"username\" name=\"username\">\n" +
             "            <label for=\"password\">Password:</label>\n" +
@@ -165,7 +158,7 @@ public class AuthenticationEndpointUtils {
             "            <div id=\"lower\">\n" +
             "                <input type=\"submit\" value=\"Login\">\n" +
             "            </div><!--/ lower-->\n" +
-            "            <input type='hidden' name='state' value='${state}'>"+
+            "            <input type='hidden' name='state' value='${state}'>" +
             "        </form>\n" +
             "    </div><!--/ container-->\n" +
             "    <!-- End Page Content -->\n" +

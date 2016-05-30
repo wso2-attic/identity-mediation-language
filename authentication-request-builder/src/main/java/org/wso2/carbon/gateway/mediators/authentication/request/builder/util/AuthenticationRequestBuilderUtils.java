@@ -16,13 +16,27 @@
 
 package org.wso2.carbon.gateway.mediators.authentication.request.builder.util;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+
 public class AuthenticationRequestBuilderUtils {
 
-    public static String getAuthenticationEndpointURL(String state) {
-        if (state == null || state.isEmpty()) {
-            return "http://localhost:8290/authenticate/";
-        } else {
-            return "http://localhost:8290/authenticate/?state=" + state;
+    public static String buildAuthenticationEndpointURL(String url, String state, String callbackURL) throws
+                                                                                              URISyntaxException {
+
+        if (url == null || url.isEmpty()) {
+            url = "http://localhost:8290/authenticate/";
         }
+
+        if (state != null && !state.isEmpty()) {
+            url = url + "?state=" + state;
+
+        }
+//        if (callbackURL != null) {
+//            url = url + "&callbackurl=" + callbackURL;
+//        }
+
+//        URI uri = new URI(url);
+        return url;
     }
 }

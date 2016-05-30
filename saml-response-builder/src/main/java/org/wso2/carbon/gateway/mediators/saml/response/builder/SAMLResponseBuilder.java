@@ -19,9 +19,12 @@
 package org.wso2.carbon.gateway.mediators.saml.response.builder;
 
 import org.joda.time.DateTime;
+import org.opensaml.Configuration;
 import org.opensaml.common.SAMLVersion;
 import org.opensaml.saml2.core.Assertion;
+import org.opensaml.saml2.core.Attribute;
 import org.opensaml.saml2.core.AttributeStatement;
+import org.opensaml.saml2.core.AttributeValue;
 import org.opensaml.saml2.core.Audience;
 import org.opensaml.saml2.core.AudienceRestriction;
 import org.opensaml.saml2.core.AuthnContext;
@@ -37,6 +40,7 @@ import org.opensaml.saml2.core.Subject;
 import org.opensaml.saml2.core.SubjectConfirmation;
 import org.opensaml.saml2.core.SubjectConfirmationData;
 import org.opensaml.saml2.core.impl.AssertionBuilder;
+import org.opensaml.saml2.core.impl.AttributeBuilder;
 import org.opensaml.saml2.core.impl.AttributeStatementBuilder;
 import org.opensaml.saml2.core.impl.AudienceBuilder;
 import org.opensaml.saml2.core.impl.AudienceRestrictionBuilder;
@@ -57,6 +61,8 @@ import org.opensaml.xml.XMLObject;
 import org.opensaml.xml.io.Marshaller;
 import org.opensaml.xml.io.MarshallerFactory;
 import org.opensaml.xml.io.MarshallingException;
+import org.opensaml.xml.schema.XSString;
+import org.opensaml.xml.schema.impl.XSStringBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
@@ -115,13 +121,14 @@ public class SAMLResponseBuilder extends AbstractMediator {
 
         String sessionID = (String) carbonMessage.getProperty("sessionID");
 
-        AuthenticationContext authenticationContext = SAMLResponseBuilderDataHolder.getInstance()
+        AuthenticationContext authenticationContextMap = SAMLResponseBuilderDataHolder.getInstance()
                 .getAuthenticationContext();
-        Map<String, Object> requestContext = (Map<String, Object>) authenticationContext.getFromContext(sessionID);
+        Map<String, Object> authenticationContext = (Map<String, Object>)
+                authenticationContextMap.getFromContext(sessionID);
 
-        AuthnRequest authnRequest = (AuthnRequest) requestContext.get("samlRequest");
+        AuthnRequest authnRequest = (AuthnRequest) authenticationContext.get("samlRequest");
 
-        String samlResponse = buildSAMLResponse(authnRequest, carbonMessage);
+        String samlResponse = buildSAMLResponse(authnRequest, authenticationContext, carbonMessage);
         DefaultCarbonMessage message = new DefaultCarbonMessage();
         String response = SAMLResponseBuilderUtils.getHTMLResponseBody(samlResponse);
         message.setStringMessageBody(response);
@@ -163,7 +170,8 @@ public class SAMLResponseBuilder extends AbstractMediator {
     }
 
 
-    private String buildSAMLResponse(AuthnRequest authnRequest, CarbonMessage carbonMessage) throws
+    private String buildSAMLResponse(AuthnRequest authnRequest, Map<String, Object> authenticationContext,
+                                     CarbonMessage carbonMessage) throws
                                                                                              ConfigurationException,
                                                                                              ParseException {
 
@@ -203,11 +211,10 @@ public class SAMLResponseBuilder extends AbstractMediator {
         NameID nameId = new NameIDBuilder().buildObject();
         //TODO Get NameID value from JWT
 
-//        SignedJWT signedJWT = (SignedJWT) carbonMessage.getProperty("signedJWT");
-
-//        nameId.setValue(signedJWT.getJWTClaimsSet().getSubject());
-        nameId.setValue("admin@carbon.super");
-        nameId.setFormat(NameID.EMAIL);
+        Map<String, String> subjectMap = (Map<String, String>) authenticationContext.get("subject");
+        Map.Entry<String,String> subjectEntry = subjectMap.entrySet().iterator().next();
+        nameId.setValue(subjectEntry.getValue());
+        nameId.setFormat(NameID.UNSPECIFIED);
 
         subject.setNameID(nameId);
 
@@ -237,11 +244,26 @@ public class SAMLResponseBuilder extends AbstractMediator {
 
         assertion.getAuthnStatements().add(authnStatement);
 
-        Map<String, String> claims = new HashMap<>();
+
+        Map<String, String> claims = (Map<String, String>) authenticationContext.get("attributes");
 
         if (claims != null && !claims.isEmpty()) {
+
             AttributeStatement attributeStatement = new AttributeStatementBuilder().buildObject();
-            //TODO add attributes
+            for (Map.Entry<String, String> entry : claims.entrySet()) {
+
+                Attribute attribute = new AttributeBuilder().buildObject();
+                attribute.setNameFormat(Attribute.BASIC);
+                attribute.setName(entry.getKey());
+
+                XSStringBuilder stringBuilder = (XSStringBuilder) Configuration.getBuilderFactory().getBuilder
+                        (XSString.TYPE_NAME);
+                XSString stringValue = stringBuilder.buildObject(AttributeValue.DEFAULT_ELEMENT_NAME, XSString.TYPE_NAME);
+                stringValue.setValue(entry.getValue());
+                attribute.getAttributeValues().add(stringValue);
+                attributeStatement.getAttributes().add(attribute);
+            }
+            assertion.getAttributeStatements().add(attributeStatement);
         }
 
         Conditions conditions = new ConditionsBuilder().buildObject();

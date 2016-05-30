@@ -41,7 +41,9 @@ import java.util.Map;
 public class AuthenticationEndpoint extends AbstractMediator {
 
     private static final Logger log = LoggerFactory.getLogger(AuthenticationEndpoint.class);
+    private static final String PROPERTY_CALLBAK_URL = "callbackurl";
     private String logMessage = "Message received at Authentication Endpoint";
+    private Map<String, String> parameters = new HashMap<>();
 
     @Override
     public String getName() {
@@ -63,6 +65,7 @@ public class AuthenticationEndpoint extends AbstractMediator {
         log.info(logMessage);
 
         DefaultCarbonMessage message = new DefaultCarbonMessage();
+        String callbackURL = parameters.get(PROPERTY_CALLBAK_URL);
 
         if (carbonMessage.getProperty(org.wso2.carbon.gateway.core.Constants.SERVICE_METHOD).equals("GET")) {
 
@@ -78,7 +81,7 @@ public class AuthenticationEndpoint extends AbstractMediator {
             }
 
             String sessionID = queryPairs.get("state");
-            message = getCarbonMessageWithLoginPage(sessionID);
+            message = getCarbonMessageWithLoginPage(callbackURL, sessionID);
 
         } else if (carbonMessage.getProperty(org.wso2.carbon.gateway.core.Constants.SERVICE_METHOD).equals("POST")) {
 
@@ -101,8 +104,8 @@ public class AuthenticationEndpoint extends AbstractMediator {
 
             Map<String, String> paramsMap = new HashMap<>();
 
-            for (int i = 0; i < paramsArray.length; i++) {
-                paramsMap.put(paramsArray[i].split("=")[0], paramsArray[i].split("=")[1]);
+            for (String aParamsArray : paramsArray) {
+                paramsMap.put(aParamsArray.split("=")[0], aParamsArray.split("=")[1]);
             }
 
             String state = paramsMap.get("state");
@@ -123,7 +126,7 @@ public class AuthenticationEndpoint extends AbstractMediator {
                 message.setProperty(Constants.HTTP_STATUS_CODE, 302);
                 message.setHeader("Location", AuthenticationEndpointUtils.getACSURL(state));
             } else {
-                message = getCarbonMessageWithLoginPage(state);
+                message = getCarbonMessageWithLoginPage(callbackURL, state);
             }
 
         }
@@ -141,7 +144,15 @@ public class AuthenticationEndpoint extends AbstractMediator {
      */
     @Override
     public void setParameters(ParameterHolder parameterHolder) {
-        logMessage = parameterHolder.getParameter("parameters").getValue();
+        String paramString = parameterHolder.getParameter("parameters").getValue();
+        String[] paramArray = paramString.split(",");
+
+        for (String param : paramArray) {
+            String[] params = param.split("=", 2);
+            if (params.length == 2) {
+                parameters.put(params[0].trim(), params[1].trim());
+            }
+        }
     }
 
 
@@ -153,12 +164,13 @@ public class AuthenticationEndpoint extends AbstractMediator {
     }
 
 
-    private DefaultCarbonMessage getCarbonMessageWithLoginPage(String state) {
+    private DefaultCarbonMessage getCarbonMessageWithLoginPage(String callbackURL, String state) {
 
         DefaultCarbonMessage message = new DefaultCarbonMessage();
         String response = AuthenticationEndpointUtils.LOGIN_PAGE;
 
         response = response.replace("${state}", state);
+        response = response.replace("${callbackURL}", callbackURL);
         message.setStringMessageBody(response);
 
         int contentLength = response.getBytes().length;
