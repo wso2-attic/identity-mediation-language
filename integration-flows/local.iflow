@@ -1,0 +1,41 @@
+@startuml
+
+participant TravelocityInbound : InboundEndpoint(protocol("http"),port("8290"),context("/travelocity"))
+
+participant SAMLInboundPipeline : Pipeline("SAML_Flow")
+participant LocalAuthInboundPipeline : Pipeline("Local_Flow")
+participant OIDCInboundPipeline : Pipeline("OIDC_Flow")
+
+const String logStatement = "state=ashsh"
+
+group name="saml", path="/saml", method="POST"
+    TravelocityInbound -> SAMLInboundPipeline : "SAML Request from SP"
+    SAMLInboundPipeline::SAMLRequestProcessor("")
+    SAMLInboundPipeline::AuthenticationRequestBuilder("authep=http://localhost:8290/authenticate/,calbackURL=http://localhost:8290/travelocity/localauth")
+    SAMLInboundPipeline -> TravelocityInbound : "Request to Authentication Endpoint"
+end
+
+group name="localauth", path="/localauth", method="POST"
+    TravelocityInbound -> LocalAuthInboundPipeline : "Response from Authentication Endpoint"
+    LocalAuthInboundPipeline::AuthenticationResponseProcessor("isSubject=true,subjectClaim=username,isAttribute=true")
+
+    if with condition(source("$header.role"),pattern("admin"))
+        LocalAuthInboundPipeline::log("Admin user.")
+        LocalAuthInboundPipeline::SAMLResponseBuilder("")
+
+    else
+        LocalAuthInboundPipeline::log("Non admin user.")
+        LocalAuthInboundPipeline::OIDCRequestBuilder("scope=openid email profile,tokenep=https://accounts.google.com/o/oauth2/v2/auth,callbackurl=http://is.ge.com:8290/travelocity/oidc,clientid= MzAxMDY1MjUwMTM0LXRsdXE0cHBkYTEyNGxscHMyN3F1bTlsc203dXZqNG5wLmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29t")
+    end
+
+    LocalAuthInboundPipeline -> TravelocityInbound : "Request to OIDC IDP"
+end
+
+group name="oidc", path="/oidc", method="GETPOST"
+    TravelocityInbound -> OIDCInboundPipeline : "Response from OIDC IDP"
+    OIDCInboundPipeline::OIDCResponseProcessor("isSubject=true,subjectClaim=email,isAttribute=true")
+    OIDCInboundPipeline::SAMLResponseBuilder("")
+    OIDCInboundPipeline -> TravelocityInbound : "SAML Response"
+end
+
+@enduml
