@@ -77,11 +77,9 @@ public class OIDCRequestBuilder extends AbstractMediator {
 
         ResponseType responseType = new ResponseType();
         responseType.add(OIDCResponseTypeValue.ID_TOKEN);
+        //responseType.add(ResponseType.Value.TOKEN);
 
         Scope scope = Scope.parse(parameters.get(PROPERTY_SCOPE));
-//      ClientID clientID = new ClientID("IDgZzC5_BZpfbdrvzolZsZZdMGga");
-        //google
-//        ClientID clientID = new ClientID("301065250134-tluq4ppda124llps27qum9lsm7uvj4np.apps.googleusercontent.com");
 
         String encodedClientID = parameters.get(PROPERTY_CLIENT_ID);
         String decodedClientID = new String(Base64.getDecoder().decode(encodedClientID.getBytes(
@@ -97,13 +95,6 @@ public class OIDCRequestBuilder extends AbstractMediator {
 
         State state = new State(sessionID);
         Nonce nonce = new Nonce();
-//
-//      URI tokenEP = new URI("https://localhost:9444/oauth2/authorize");
-//      URI callback = new URI("http://localhost:8290/travelocity/oidc");
-
-        //Google
-//        URI tokenEP = new URI("https://accounts.google.com/o/oauth2/v2/auth");
-//        URI callback = new URI("http://is.ge.com:8290/travelocity/oidc");
 
         URI tokenEP = new URI(parameters.get(PROPERTY_TOKEN_ENDPOINT));
         URI callback = new URI(parameters.get(PROPERTY_CALLBACK_URL));

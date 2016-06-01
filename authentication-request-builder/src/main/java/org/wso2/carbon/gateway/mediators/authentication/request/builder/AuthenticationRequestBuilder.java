@@ -39,7 +39,7 @@ public class AuthenticationRequestBuilder extends AbstractMediator {
 
     private static final Logger log = LoggerFactory.getLogger(AuthenticationRequestBuilder.class);
     private static final String PROPERTY_AUTHENTICATION_ENDPOINT = "authep";
-    private static final String PROPERTY_CALLBACK_URL = "calbackURL";
+    private static final String PROPERTY_CALLBACK_URL = "callbackURL";
     private String logMessage = "Message received at Sample Mediator";   // Sample Mediator specific variable
     private Map<String, String> parameters = new HashMap<>();
 

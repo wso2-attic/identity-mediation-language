@@ -1,16 +1,20 @@
 package org.wso2.carbon.gateway.mediators.authentication.response.processor.util;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 
 public class AuthenticationResponseProcessorUtils {
-    public static String getAuthenticationEndpointURL(String state) {
+    public static String getAuthenticationEndpointURL(String state, String callbackURL)
+            throws UnsupportedEncodingException {
         if (state == null || state.isEmpty()) {
             return "http://localhost:8290/authenticate/";
         } else {
-            return "http://localhost:8290/authenticate/?state=" + state;
+            return "http://localhost:8290/authenticate/?state=" + state + "&callbackurl=" +
+                   URLEncoder.encode(callbackURL, StandardCharsets.UTF_8.name());
         }
     }
 
@@ -29,14 +33,14 @@ public class AuthenticationResponseProcessorUtils {
 
     static {
         userMap.put("admin", new char[] {'a', 'd', 'm', 'i', 'n'});
-        userMap.put("testuser", new char[] {'t', 'e', 's', 't', '1', '2', '3'});
+        userMap.put("omindu", new char[] {'t', 'e', 's', 't', '1', '2', '3'});
 
         userRoleMap.put("admin", new ArrayList<String>() {
             {
                 add("admin");
             }
         });
-        userRoleMap.put("testuser", new ArrayList<String>() {
+        userRoleMap.put("omindu", new ArrayList<String>() {
             {
                 add("nonadmin");
             }

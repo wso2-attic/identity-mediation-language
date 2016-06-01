@@ -30,6 +30,7 @@ import org.wso2.carbon.messaging.Constants;
 import org.wso2.carbon.messaging.DefaultCarbonMessage;
 import org.wso2.identity.bus.framework.AuthenticationContext;
 
+import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -151,7 +152,17 @@ public class AuthenticationResponseProcessor extends AbstractMediator {
 
             message.setHeaders(transportHeaders);
             message.setProperty(Constants.HTTP_STATUS_CODE, 302);
-            message.setHeader("Location", AuthenticationResponseProcessorUtils.getAuthenticationEndpointURL(state));
+
+            URI uri = new URI(carbonMessage.getProperty(Constants.PROTOCOL).toString().toLowerCase(),
+                              null,
+                              carbonMessage.getProperty(Constants.HOST).toString(),
+                              Integer.parseInt(carbonMessage.getProperty(Constants.LISTENER_PORT).toString()),
+                              carbonMessage.getProperty(Constants.TO).toString(),
+                              null,
+                              null);
+
+            message.setHeader("Location", AuthenticationResponseProcessorUtils.
+                    getAuthenticationEndpointURL(state, uri.toASCIIString()));
             message.setProperty(Constants.DIRECTION, Constants.DIRECTION_RESPONSE);
             message.setProperty(Constants.CALL_BACK, carbonCallback);
             carbonCallback.done(message);

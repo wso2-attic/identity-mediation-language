@@ -81,6 +81,12 @@ public class AuthenticationEndpoint extends AbstractMediator {
             }
 
             String sessionID = queryPairs.get("state");
+            String encodedCallbackURL = queryPairs.get("callbackURL");
+
+            if (encodedCallbackURL != null) {
+                callbackURL = URLDecoder.decode(encodedCallbackURL, StandardCharsets.UTF_8.name());
+            }
+
             message = getCarbonMessageWithLoginPage(callbackURL, sessionID);
 
         } else if (carbonMessage.getProperty(org.wso2.carbon.gateway.core.Constants.SERVICE_METHOD).equals("POST")) {
