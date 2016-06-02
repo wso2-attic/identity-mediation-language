@@ -81,7 +81,8 @@ public class OIDCResponseProcessor extends AbstractMediator {
 
         if (carbonMessage.getProperty(org.wso2.carbon.gateway.core.Constants.SERVICE_METHOD).equals("GET")) {
             try {
-
+                // NOTE: This approach is used to overcome the issue of, IS 5.1.0 sending the id_token as a query
+                // param instead of a URL fragment. Ideally we will not be needing the logic inside the 'try' block.
                 successResponse = AuthenticationSuccessResponse.parse(new URI((String) carbonMessage.getProperty
                         (Constants.TO)));
                 Map<String, String> query_pairs = new HashMap<>();
