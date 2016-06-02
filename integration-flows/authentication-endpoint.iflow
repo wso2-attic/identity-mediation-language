@@ -1,0 +1,11 @@
+@startuml
+
+participant AuthEndpoint : InboundEndpoint(protocol("http"),port("8290"),context("/authenticate"))
+
+participant AuthenticationPipeline : Pipeline("Usename_Password_Authentication_Flow")
+
+AuthEndpoint -> AuthenticationPipeline : "client request"
+AuthenticationPipeline::AuthenticationEndpoint("callbackurl=http://localhost:8290/travelocity/localauth")
+AuthenticationPipeline -> AuthEndpoint : "Final Response"
+
+@enduml

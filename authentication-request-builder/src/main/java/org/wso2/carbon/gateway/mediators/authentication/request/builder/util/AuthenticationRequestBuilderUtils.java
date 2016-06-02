@@ -16,13 +16,30 @@
 
 package org.wso2.carbon.gateway.mediators.authentication.request.builder.util;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
 public class AuthenticationRequestBuilderUtils {
 
-    public static String getAuthenticationEndpointURL(String state) {
-        if (state == null || state.isEmpty()) {
-            return "http://localhost:8290/authenticate/";
-        } else {
-            return "http://localhost:8290/authenticate/?state=" + state;
+    public static String buildAuthenticationEndpointURL(String url, String state, String callbackURL)
+            throws UnsupportedEncodingException {
+
+        if (url == null || url.isEmpty()) {
+            url = "http://localhost:8290/authenticate/";
         }
+
+
+        if (state != null && !state.isEmpty()) {
+            url = url + "?state=" + state;
+
+        }
+        if (callbackURL != null) {
+            url = url + "&callbackurl=" + URLEncoder.encode(callbackURL, StandardCharsets.UTF_8.name());
+        }
+
+        return url;
     }
 }

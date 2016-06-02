@@ -19,6 +19,7 @@
 package org.wso2.carbon.gateway.mediators.oidc.request.builder;
 
 import com.nimbusds.oauth2.sdk.ResponseType;
+import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.State;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
@@ -33,83 +34,111 @@ import org.wso2.carbon.messaging.CarbonMessage;
 import org.wso2.carbon.messaging.Constants;
 
 import java.net.URI;
-import java.util.UUID;
-
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
-* Mediator Implementation
-*/
+ * Mediator Implementation
+ */
 public class OIDCRequestBuilder extends AbstractMediator {
 
-  private static final Logger log = LoggerFactory.getLogger(OIDCRequestBuilder.class);
-  private String logMessage = "Message received at Sample Mediator";   // Sample Mediator specific variable
+    private static final Logger log = LoggerFactory.getLogger(OIDCRequestBuilder.class);
+    private static final String PROPERTY_TOKEN_ENDPOINT = "tokenep";
+    private static final String PROPERTY_CALLBACK_URL = "callbackurl";
+    private static final String PROPERTY_CLIENT_ID = "clientid";
+    private static final String PROPERTY_SCOPE = "scope";
 
+    private String logMessage = "Message received at Sample Mediator";
+    private Map<String, String> parameters = new HashMap<>();
 
-  @Override
-  public String getName() {
-    return "OIDCRequestBuilder";
-  }
+    @Override
+    public String getName() {
+        return "OIDCRequestBuilder";
+    }
 
-  /**
-  * Mediate the message.
-  *
-  * This is the execution point of the mediator.
-  * @param carbonMessage MessageContext to be mediated
-  * @param carbonCallback Callback which can be use to call the previous step
-  * @return whether mediation is success or not
-  **/
-  @Override
-  public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) throws Exception {
-      if (log.isDebugEnabled()) {
-          log.info("Message received at " + getName());
-      }
+    /**
+     * Mediate the message.
+     * <p/>
+     * This is the execution point of the mediator.
+     *
+     * @param carbonMessage  MessageContext to be mediated
+     * @param carbonCallback Callback which can be use to call the previous step
+     * @return whether mediation is success or not
+     */
+    @Override
+    public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) throws Exception {
 
-      ResponseType responseType = new ResponseType();
-      responseType.add(OIDCResponseTypeValue.ID_TOKEN);
+        if (log.isDebugEnabled()) {
+            log.info("Message received at " + getName());
+        }
 
-      com.nimbusds.oauth2.sdk.Scope scope = com.nimbusds.oauth2.sdk.Scope.parse("openid");
-      ClientID clientID = new ClientID("IDgZzC5_BZpfbdrvzolZsZZdMGga");
+        ResponseType responseType = new ResponseType();
+        responseType.add(OIDCResponseTypeValue.ID_TOKEN);
+        //responseType.add(ResponseType.Value.TOKEN);
 
-      String sessionID = (String) carbonMessage.getProperty("sessionID");
+        Scope scope = Scope.parse(parameters.get(PROPERTY_SCOPE));
 
-      if (sessionID == null || sessionID.isEmpty()) {
-          log.error("No session details found.");
-          return false;
-      }
+        String encodedClientID = parameters.get(PROPERTY_CLIENT_ID);
+        String decodedClientID = new String(Base64.getDecoder().decode(encodedClientID.getBytes(
+                StandardCharsets.UTF_8)));
 
-      State state = new State(sessionID);
-      Nonce nonce = new Nonce();
+        ClientID clientID = new ClientID(decodedClientID);
+        String sessionID = (String) carbonMessage.getProperty("sessionID");
 
-      URI tokenEP = new URI("https://localhost:9444/oauth2/authorize");
-      URI callback = new URI("http://localhost:8290/travelocity/oidc");
-      AuthenticationRequest authenticationRequest = new AuthenticationRequest(tokenEP, responseType, scope,
-                                                                              clientID, callback, state,
-                                                                              nonce);
-      carbonMessage.setProperty(Constants.HTTP_STATUS_CODE, 302);
-      carbonMessage.setHeader("Location", authenticationRequest.toURI().toASCIIString());
+        if (sessionID == null || sessionID.isEmpty()) {
+            log.error("No session details found.");
+            return false;
+        }
 
+        State state = new State(sessionID);
+        Nonce nonce = new Nonce();
+
+        URI tokenEP = new URI(parameters.get(PROPERTY_TOKEN_ENDPOINT));
+        URI callback = new URI(parameters.get(PROPERTY_CALLBACK_URL));
+
+        AuthenticationRequest authenticationRequest = new AuthenticationRequest(tokenEP, responseType, scope,
+                                                                                clientID, callback, state,
+                                                                                nonce);
+        carbonMessage.setProperty(Constants.HTTP_STATUS_CODE, 302);
+        carbonMessage.setHeader("Location", authenticationRequest.toURI().toASCIIString());
+
+        //TODO: FIGURE THI OUT!!
 //      SAMLtoOIDCDSL.authenticationContextMap.put(sessionID, (AuthenticationContext) carbonMessage.
 //              getProperty("authenticationContext"));
 
-      carbonCallback.done(carbonMessage);
-      return true;
-  }
+        carbonCallback.done(carbonMessage);
+        return true;
+    }
 
- /**
-  * Set Parameters
-  *
-  * @param parameterHolder holder which contains key-value pairs of parameters
-  */
-  @Override
-  public void setParameters(ParameterHolder parameterHolder) {
-    logMessage = parameterHolder.getParameter("parameters").getValue();
-  }
+    /**
+     * Set Parameters
+     *
+     * @param parameterHolder holder which contains key-value pairs of parameters
+     */
+    @Override
+    public void setParameters(ParameterHolder parameterHolder) {
+
+        String paramString = parameterHolder.getParameter("parameters").getValue();
+        String[] paramArray = paramString.split(",");
+
+        for (String param : paramArray) {
+            String[] params = param.split("=", 2);
+            if (params.length == 2) {
+                parameters.put(params[0].trim(), params[1].trim());
+            }
+        }
+    }
 
 
-  /** This is a sample mediator specific method */
-  public void setLogMessage(String logMessage) {
-     this.logMessage = logMessage;
-  }
+    /**
+     * This is a sample mediator specific method
+     */
+    public void setLogMessage(String logMessage) {
+        this.logMessage = logMessage;
+    }
 
 
 }

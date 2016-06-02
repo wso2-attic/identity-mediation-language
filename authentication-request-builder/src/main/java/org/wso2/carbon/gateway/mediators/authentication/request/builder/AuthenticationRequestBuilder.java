@@ -28,12 +28,8 @@ import org.wso2.carbon.messaging.CarbonMessage;
 import org.wso2.carbon.messaging.Constants;
 import org.wso2.carbon.messaging.DefaultCarbonMessage;
 
-import java.net.URI;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 
 /**
@@ -42,8 +38,10 @@ import java.util.UUID;
 public class AuthenticationRequestBuilder extends AbstractMediator {
 
     private static final Logger log = LoggerFactory.getLogger(AuthenticationRequestBuilder.class);
+    private static final String PROPERTY_AUTHENTICATION_ENDPOINT = "authep";
+    private static final String PROPERTY_CALLBACK_URL = "callbackURL";
     private String logMessage = "Message received at Sample Mediator";   // Sample Mediator specific variable
-
+    private Map<String, String> parameters = new HashMap<>();
 
     @Override
     public String getName() {
@@ -82,7 +80,11 @@ public class AuthenticationRequestBuilder extends AbstractMediator {
 
         message.setHeaders(transportHeaders);
         message.setProperty(Constants.HTTP_STATUS_CODE, 302);
-        message.setHeader("Location", AuthenticationRequestBuilderUtils.getAuthenticationEndpointURL(state));
+
+        String authenticationEndpoint = parameters.get(PROPERTY_AUTHENTICATION_ENDPOINT);
+        String callbackURL = parameters.get(PROPERTY_CALLBACK_URL);
+        message.setHeader("Location", AuthenticationRequestBuilderUtils.buildAuthenticationEndpointURL
+                (authenticationEndpoint, state, callbackURL));
         message.setProperty(Constants.DIRECTION, Constants.DIRECTION_RESPONSE);
         message.setProperty(Constants.CALL_BACK, carbonCallback);
         carbonCallback.done(message);
@@ -97,7 +99,15 @@ public class AuthenticationRequestBuilder extends AbstractMediator {
      */
     @Override
     public void setParameters(ParameterHolder parameterHolder) {
-        logMessage = parameterHolder.getParameter("parameters").getValue();
+        String paramString = parameterHolder.getParameter("parameters").getValue();
+        String[] paramArray = paramString.split(",");
+
+        for (String param : paramArray) {
+            String[] params = param.split("=", 2);
+            if (params.length == 2) {
+                parameters.put(params[0].trim(), params[1].trim());
+            }
+        }
     }
 
 
