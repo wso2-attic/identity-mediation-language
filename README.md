@@ -39,3 +39,21 @@
   ```
 5. Copy authentication-endpoint.iflow and one of the 3 integration flows to `<iserver_home>/deployment/integration-flows/`.
 6. Setup travelocity sample and set the IDP url to `http://localhost:8290/travelocity/saml`.
+
+## Usecases
+
+### Usecase 1 - Local Authenticator
+
+![Image of Usecase 1](https://github.com/omindu/iml-poc/blob/master/integration-flows/local.png)
+
+### Usecase 2 - Multi-Step Authentication
+
+![Image of Usecase 1](https://github.com/omindu/iml-poc/blob/master/integration-flows/multi-step.png)
+
+### Usecase 3 - Multi-Step with Role Based Step Control
+
+![Image of Usecase 1](https://github.com/omindu/iml-poc/blob/master/integration-flows/RBAC.png)
+
+
+
+
