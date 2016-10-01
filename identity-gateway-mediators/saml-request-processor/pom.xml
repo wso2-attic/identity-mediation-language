@@ -20,18 +20,18 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <parent>
-        <groupId>org.wso2</groupId>
-        <artifactId>wso2</artifactId>
-        <version>2</version>
+        <groupId>org.wso2.carbon.gateway.mediators</groupId>
+        <artifactId>identity-gateway-mediators</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
-    <groupId>org.wso2.carbon.gateway.mediators</groupId>
-    <artifactId>authentication-request-builder</artifactId>
+    <artifactId>saml-request-processor</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>authentication-request-builder</name>
+    <name>saml-request-processor</name>
 
     <dependencies>
         <dependency>
@@ -68,6 +68,16 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
             <version>${slf4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>opensaml.wso2</groupId>
+            <artifactId>opensaml2</artifactId>
+            <version>2.4.1.wso2v1</version>
+        </dependency>
+        <dependency>
+            <groupId>xerces.wso2</groupId>
+            <artifactId>xercesImpl</artifactId>
+            <version>2.8.1.wso2v2</version>
         </dependency>
         <dependency>
             <groupId>org.wso2.identity.bus.framework</groupId>
@@ -115,15 +125,21 @@
         <osgi.framework.import.version.range>[1.8.0, 2.0.0)</osgi.framework.import.version.range>
         <osgi.service.tracker.import.version.range>[1.5.1, 2.0.0)</osgi.service.tracker.import.version.range>
         <export.package>
-            org.wso2.carbon.gateway.mediators.authentication.request.builder,
-            org.wso2.carbon.gateway.mediators.authentication.request.builder.builder,
-            org.wso2.carbon.gateway.mediators.authentication.request.builder.util
+            org.wso2.carbon.gateway.mediators.saml.request.processor,
+            org.wso2.carbon.gateway.mediators.saml.request.processor.builder,
+            org.wso2.carbon.gateway.mediators.saml.request.processor.util,
         </export.package>
         <import.package>
             org.osgi.framework.*;version="${osgi.framework.import.version.range}",
             org.wso2.carbon.gateway.core.*,
             org.wso2.carbon.messaging.*,
             org.slf4j.*;version="${slf4j.logging.package.import.version.range}",
+            org.opensaml.*,
+            org.joda.*,
+            org.apache.xerces.util; resolution:=optional,
+            javax.xml.*,
+            org.xml.*,
+            org.w3c.dom.*; resolution:=optional,
             org.wso2.identity.bus.framework.*,
         </import.package>
 
