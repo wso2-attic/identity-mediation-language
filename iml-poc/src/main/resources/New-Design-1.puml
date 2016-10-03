@@ -1,0 +1,32 @@
+@startuml
+
+participant sp
+participant sp_inbound_endpoint
+participant sp_sequence
+participant google
+participant facebook
+participant fido
+
+
+sp -> sp_inbound_endpoint
+sp_inbound_endpoint -> sp_sequence
+
+
+alt google
+sp_sequence -> google
+google -> sp_sequence
+
+else facebook
+sp_sequence -> facebook
+facebook -> sp_sequence
+end
+
+alt success
+sp_sequence -> fido
+fido -> sp_sequence
+end
+
+sp_sequence -> sp_inbound_endpoint
+sp_inbound_endpoint -> sp
+
+@enduml

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <parent>
+        <groupId>org.wso2.carbon.identity.gateway</groupId>
+        <artifactId>identity-mediation-language</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>identity-gateway-mediators</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>Identity Gateway Mediator Aggregator</name>
+
+    <modules>
+        <module>authentication-endpoint</module>
+        <module>authentication-request-builder</module>
+        <module>authentication-response-processor</module>
+        <module>oidc-request-builder</module>
+        <module>oidc-response-processor</module>
+        <module>saml-request-processor</module>
+        <module>saml-response-builder</module>
+    </modules>
+
+</project>

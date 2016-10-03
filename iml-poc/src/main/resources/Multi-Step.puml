@@ -1,0 +1,40 @@
+@startuml
+participant user_agent
+participant service_provider
+participant "http_inbound:\n/travelocity" as http_inbound_travelocity
+participant "sequence:\ntravelocity" as sequence_1
+participant "authentication \nendpoint" as auth_endpoint
+participant oidc_fidp
+
+user_agent -> service_provider : Access resource
+service_provider -> user_agent : [302] Redirects to bus\nwith SAML login request
+user_agent -> http_inbound_travelocity : Follows redirect with SAML login request
+http_inbound_travelocity -> sequence_1 : SAML login request
+hnote over sequence_1 : SAML request processor
+hnote over sequence_1 : Authentication request\nbuilder
+
+sequence_1 -> user_agent : [302] Redirects to authentication endpoint
+user_agent -> auth_endpoint : Follows redirect
+auth_endpoint <--> user_agent : User authentication
+auth_endpoint -> user_agent : [302]Authentication response
+user_agent -> http_inbound_travelocity : [302]Redirects to /travelocity with
+http_inbound_travelocity -> sequence_1 : Authentication response
+hnote over sequence_1 : Authentication response\nprocessor
+hnote over sequence_1 : OIDC request builder
+
+sequence_1 -> user_agent : [302]Redirects to IDP
+user_agent -> oidc_fidp : Follows redirect: GET /authorize [Implicit]
+
+oidc_fidp <--> user_agent : User authentication
+oidc_fidp -> user_agent : [302]Redirects to /travelocity with ID token
+user_agent -> http_inbound_travelocity : Follows redirect with ID token
+http_inbound_travelocity -> sequence_1 : ID token
+hnote over sequence_1 : OIDC response processor
+hnote over sequence_1 : SAML response builder
+
+sequence_1 -> user_agent : [200]SAML response in HTML from
+user_agent -> service_provider : POST SAML response
+service_provider -> user_agent : Supply resource
+
+@enduml
+
