@@ -1,0 +1,52 @@
+@startuml
+
+participant user_agent
+participant service_provider
+participant TravelocityInbound
+participant SAMLInboundPipeline
+participant LocalAuthInboundPipeline
+participant OIDCInboundPipeline
+participant authentication_endpoint
+
+user_agent -> service_provider : [GET] Access resource
+service_provider -> user_agent : [200] SAML request in HTML from
+user_agent -> TravelocityInbound : [POST] SAML login request
+
+group name="saml", path="/saml", method="POST"
+    TravelocityInbound -> SAMLInboundPipeline : "SAML Request from SP"
+    hnote over SAMLInboundPipeline : SAMLRequestProcessor
+    hnote over SAMLInboundPipeline : AuthenticationRequestBuilder
+    SAMLInboundPipeline -> TravelocityInbound : "Request to Authentication Endpoint"
+end
+
+TravelocityInbound -> user_agent : [302] Redirects to authentication endpoint
+user_agent -> authentication_endpoint : [GET] Authentication request
+authentication_endpoint <--> user_agent : User authentication
+authentication_endpoint -> user_agent : [302] Authentication response
+user_agent -> TravelocityInbound : [GET] Authentication response
+
+group name="localauth", path="/localauth", method="GET"
+    TravelocityInbound -> LocalAuthInboundPipeline : "Response from Authentication Endpoint"
+    hnote over LocalAuthInboundPipeline : AuthenticationResponseProcessor
+    hnote over LocalAuthInboundPipeline : OIDCRequestBuilder
+    LocalAuthInboundPipeline -> TravelocityInbound : "Request to OIDC IDP"
+end
+
+TravelocityInbound -> user_agent : [302] Redirects to FIDP
+user_agent -> authentication_endpoint : [GET] Authentication request
+authentication_endpoint <--> user_agent : User authentication
+authentication_endpoint -> user_agent : [302] ID Token
+user_agent -> TravelocityInbound : [GET] ID Token
+
+group name="oidc", path="/oidc", method="GET"
+    TravelocityInbound -> OIDCInboundPipeline : "Response from OIDC IDP"
+    hnote over OIDCInboundPipeline : OIDCResponseProcessor
+    hnote over OIDCInboundPipeline : SAMLResponseBuilder
+    OIDCInboundPipeline -> TravelocityInbound : "SAML Response"
+end
+
+TravelocityInbound -> user_agent : [200] SAML response in HTML from
+user_agent -> service_provider : [POST] SAML response
+service_provider -> user_agent : [200] Supply resource
+
+@enduml
