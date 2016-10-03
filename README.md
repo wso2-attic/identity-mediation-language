@@ -1,1 +1,1 @@
-# identity-mediation-language
+# Identity-mediation-language
