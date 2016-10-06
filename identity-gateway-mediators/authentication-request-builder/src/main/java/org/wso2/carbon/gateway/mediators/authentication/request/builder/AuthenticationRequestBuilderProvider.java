@@ -57,6 +57,7 @@ public class AuthenticationRequestBuilderProvider implements MediatorProvider {
 
     protected void unregister(AuthenticationContext authenticationContext) {
     }
+
     @Override
     public String getName() {
         return "AuthenticationRequestBuilder";

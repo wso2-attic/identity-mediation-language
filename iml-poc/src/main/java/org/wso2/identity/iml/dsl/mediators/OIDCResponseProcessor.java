@@ -58,7 +58,7 @@ public class OIDCResponseProcessor extends AbstractMediator {
         for (String pair : pairs) {
             int idx = pair.indexOf("=");
             query_pairs.put(URLDecoder.decode(pair.substring(0, idx), StandardCharsets.UTF_8.name()),
-                            URLDecoder.decode(pair.substring(idx + 1), StandardCharsets.UTF_8.name()));
+                    URLDecoder.decode(pair.substring(idx + 1), StandardCharsets.UTF_8.name()));
         }
 
         SignedJWT signedJWT = (SignedJWT) successResponse.getIDToken();

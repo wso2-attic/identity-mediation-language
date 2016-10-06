@@ -18,18 +18,18 @@
 
 package org.wso2.carbon.gateway.mediators.authentication.endpoint.builder;
 
-import org.wso2.carbon.gateway.mediators.authentication.endpoint.AuthenticationEndpoint;
 import org.wso2.carbon.gateway.core.flow.Mediator;
+import org.wso2.carbon.gateway.mediators.authentication.endpoint.AuthenticationEndpoint;
 
 /**
-* Mediator Builder for Java DSL
-*/
+ * Mediator Builder for Java DSL
+ */
 public class AuthenticationEndpointBuilder {
 
-  public static Mediator action(String message) {
-    AuthenticationEndpoint m = new AuthenticationEndpoint();
-    m.setLogMessage(message);
-    return m;
-  }
+    public static Mediator action(String message) {
+        AuthenticationEndpoint m = new AuthenticationEndpoint();
+        m.setLogMessage(message);
+        return m;
+    }
 }
 

@@ -18,6 +18,9 @@ package org.wso2.carbon.gateway.mediators.authentication.request.builder;
 
 import org.wso2.identity.bus.framework.AuthenticationContext;
 
+/**
+ * DataHolder class for authentication-request-builder.
+ */
 public class AuthenticationRequestBuilderDataHolder {
 
     private static AuthenticationRequestBuilderDataHolder instance = new AuthenticationRequestBuilderDataHolder();

@@ -20,9 +20,15 @@ import org.opensaml.DefaultBootstrap;
 import org.opensaml.saml2.core.Issuer;
 import org.opensaml.saml2.core.impl.IssuerBuilder;
 import org.opensaml.xml.ConfigurationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+/**
+ * Util class for SAMLResponseBuilder.
+ */
 public class SAMLResponseBuilderUtils {
 
+    private static Logger logger = LoggerFactory.getLogger(SAMLResponseBuilderUtils.class);
     private static boolean isBootStrapped = false;
 
     public static void doBootstrap() {
@@ -31,8 +37,7 @@ public class SAMLResponseBuilderUtils {
                 DefaultBootstrap.bootstrap();
                 isBootStrapped = true;
             } catch (ConfigurationException e) {
-                e.printStackTrace();
-                //log.error("Error in bootstrapping the OpenSAML2 library", e);
+                logger.error("Error in bootstrapping the OpenSAML2 library", e);
             }
         }
     }
@@ -50,21 +55,21 @@ public class SAMLResponseBuilderUtils {
     }
 
     public static String getHTMLResponseBody(String samlResponse) {
-        String responseBody = "<html>\n"+
-                              "\t<body>\n"+
-                              "        \t<p>You are now redirected to $url \n"+
-                              "        \tIf the redirection fails, please click the post button.</p>\n"+
-                              "        \t<form method='post' action='http://localhost:8080/travelocity.com/home.jsp'>\n"+
-                              "       \t\t\t<p>\n"+
-                              "<input type='hidden' name='SAMLResponse' value='" + samlResponse + "'>"+
-                              "        \t\t\t<button type='submit'>POST</button>\n"+
-                              "       \t\t\t</p>\n"+
-                              "       \t\t</form>\n"+
-                              "       \t\t<script type='text/javascript'>\n"+
-                              "        \t\tdocument.forms[0].submit();\n"+
-                              "        \t</script>\n"+
-                              "        </body>\n"+
-                              "</html>";
+        String responseBody = "<html>\n" +
+                "\t<body>\n" +
+                "        \t<p>You are now redirected to $url \n" +
+                "        \tIf the redirection fails, please click the post button.</p>\n" +
+                "        \t<form method='post' action='http://localhost:8080/travelocity.com/home.jsp'>\n" +
+                "       \t\t\t<p>\n" +
+                "<input type='hidden' name='SAMLResponse' value='" + samlResponse + "'>" +
+                "        \t\t\t<button type='submit'>POST</button>\n" +
+                "       \t\t\t</p>\n" +
+                "       \t\t</form>\n" +
+                "       \t\t<script type='text/javascript'>\n" +
+                "        \t\tdocument.forms[0].submit();\n" +
+                "        \t</script>\n" +
+                "        </body>\n" +
+                "</html>";
 
         return responseBody;
     }

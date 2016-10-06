@@ -34,7 +34,6 @@ import org.wso2.carbon.gateway.core.flow.AbstractMediator;
 import org.wso2.carbon.gateway.mediators.saml.request.processor.util.SAMLRequestProcessorUtils;
 import org.wso2.carbon.messaging.CarbonCallback;
 import org.wso2.carbon.messaging.CarbonMessage;
-import org.wso2.carbon.messaging.Constants;
 import org.wso2.carbon.messaging.DefaultCarbonMessage;
 import org.wso2.identity.bus.framework.AuthenticationContext;
 import org.xml.sax.SAXException;
@@ -44,6 +43,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLDecoder;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.HashMap;
@@ -64,7 +64,8 @@ public class SAMLRequestProcessor extends AbstractMediator {
     private static final Logger log = LoggerFactory.getLogger(SAMLRequestProcessor.class);
     private String logMessage = "Message received at SAML Mediator";
     private static final String SECURITY_MANAGER_PROPERTY = org.apache.xerces.impl.Constants.XERCES_PROPERTY_PREFIX +
-                                                            org.apache.xerces.impl.Constants.SECURITY_MANAGER_PROPERTY;
+            org.apache.xerces.impl.Constants.SECURITY_MANAGER_PROPERTY;
+    private static final Charset UTF_8 = StandardCharsets.UTF_8;
 
     @Override
     public String getName() {
@@ -90,13 +91,13 @@ public class SAMLRequestProcessor extends AbstractMediator {
 
         byte[] bytes;
 
-        String contentLength = carbonMessage.getHeader(Constants.HTTP_CONTENT_LENGTH);
+        String contentLength = carbonMessage.getHeader(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_LENGTH);
         if (contentLength != null) {
 
             newReq = new DefaultCarbonMessage();
             bytes = new byte[Integer.parseInt(contentLength)];
 
-            newReq.setHeaders(carbonMessage.getHeaders());
+            //  TODO fix this  newReq.setHeaders(carbonMessage.getHeaders());
             carbonMessage.getProperties().forEach(newReq::setProperty);
             List<ByteBuffer> fullMessageBody = carbonMessage.getFullMessageBody();
 
@@ -110,15 +111,15 @@ public class SAMLRequestProcessor extends AbstractMediator {
             }
             newReq.setEndOfMsgAdded(true);
 
-            String encodedRequest = new String(bytes);
-            String urlDecodedRequest = URLDecoder.decode(encodedRequest.split("=", 2)[1], StandardCharsets.UTF_8.name());
-            String decodedRequest = new String(Base64.getDecoder().decode(urlDecodedRequest));
+            String encodedRequest = new String(bytes, UTF_8);
+            String urlDecodedRequest = URLDecoder.decode(encodedRequest.split("=", 2)[1], UTF_8.name());
+            String decodedRequest = new String(Base64.getDecoder().decode(urlDecodedRequest), UTF_8);
 
             if (log.isDebugEnabled()) {
                 log.debug("Decoded SAML request: " + decodedRequest);
             }
 
-            AuthnRequest samlAuthnRequest = SAMLRequestParser(decodedRequest);
+            AuthnRequest samlAuthnRequest = buildSAMLRequest(decodedRequest);
 
 
             String sessionID = UUID.randomUUID().toString();
@@ -165,9 +166,9 @@ public class SAMLRequestProcessor extends AbstractMediator {
     }
 
 
-    private AuthnRequest SAMLRequestParser(String samlRequest)
+    private AuthnRequest buildSAMLRequest(String samlRequest)
             throws ParserConfigurationException, SAXException, ConfigurationException, IOException,
-                   UnmarshallingException {
+            UnmarshallingException {
 
         SAMLRequestProcessorUtils.doBootstrap();
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
@@ -182,11 +183,11 @@ public class SAMLRequestProcessor extends AbstractMediator {
         DocumentBuilder docBuilder = documentBuilderFactory.newDocumentBuilder();
         docBuilder.setEntityResolver((publicId, systemId) -> {
             throw new SAXException("SAML request contains invalid elements. Possible XML External Entity " +
-                                   "(XXE) attack.");
+                    "(XXE) attack.");
         });
 
         try (InputStream inputStream = new ByteArrayInputStream(samlRequest.trim().getBytes(StandardCharsets
-                                                                                                    .UTF_8))) {
+                .UTF_8))) {
 
             Document document = docBuilder.parse(inputStream);
             Element element = document.getDocumentElement();

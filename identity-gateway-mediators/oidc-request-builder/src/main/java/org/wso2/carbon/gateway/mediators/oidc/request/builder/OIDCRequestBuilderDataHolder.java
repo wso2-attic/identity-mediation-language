@@ -18,6 +18,9 @@ package org.wso2.carbon.gateway.mediators.oidc.request.builder;
 
 import org.wso2.identity.bus.framework.AuthenticationContext;
 
+/**
+ * DataHolder for oidc-request-builder component.
+ */
 public class OIDCRequestBuilderDataHolder {
     private static OIDCRequestBuilderDataHolder instance = new OIDCRequestBuilderDataHolder();
 

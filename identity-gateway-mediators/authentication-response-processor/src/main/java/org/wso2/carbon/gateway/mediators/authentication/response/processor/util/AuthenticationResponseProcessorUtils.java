@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Util class for AuthenticationResponseProcessor
+ */
 public class AuthenticationResponseProcessorUtils {
     public static String getAuthenticationEndpointURL(String state, String callbackURL)
             throws UnsupportedEncodingException {
@@ -14,7 +17,7 @@ public class AuthenticationResponseProcessorUtils {
             return "http://localhost:8290/authenticate/";
         } else {
             return "http://localhost:8290/authenticate/?state=" + state + "&callbackurl=" +
-                   URLEncoder.encode(callbackURL, StandardCharsets.UTF_8.name());
+                    URLEncoder.encode(callbackURL, StandardCharsets.UTF_8.name());
         }
     }
 
@@ -32,8 +35,8 @@ public class AuthenticationResponseProcessorUtils {
     }
 
     static {
-        userMap.put("admin", new char[] {'a', 'd', 'm', 'i', 'n'});
-        userMap.put("omindu", new char[] {'t', 'e', 's', 't', '1', '2', '3'});
+        userMap.put("admin", new char[]{'a', 'd', 'm', 'i', 'n'});
+        userMap.put("omindu", new char[]{'t', 'e', 's', 't', '1', '2', '3'});
 
         userRoleMap.put("admin", new ArrayList<String>() {
             {

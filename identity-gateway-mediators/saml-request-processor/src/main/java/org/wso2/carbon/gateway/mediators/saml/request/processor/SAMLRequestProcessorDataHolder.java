@@ -18,6 +18,9 @@ package org.wso2.carbon.gateway.mediators.saml.request.processor;
 
 import org.wso2.identity.bus.framework.AuthenticationContext;
 
+/**
+ * DataHolder class for saml-request-processor component.
+ */
 public class SAMLRequestProcessorDataHolder {
 
     private static SAMLRequestProcessorDataHolder instance = new SAMLRequestProcessorDataHolder();

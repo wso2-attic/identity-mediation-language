@@ -18,8 +18,8 @@
 
 package org.wso2.carbon.gateway.mediators.authentication.request.builder.builder;
 
-import org.wso2.carbon.gateway.mediators.authentication.request.builder.AuthenticationRequestBuilder;
 import org.wso2.carbon.gateway.core.flow.Mediator;
+import org.wso2.carbon.gateway.mediators.authentication.request.builder.AuthenticationRequestBuilder;
 
 /**
  * Mediator Builder for Java DSL

@@ -55,7 +55,8 @@ public class SAMLRequestProcessor extends AbstractMediator {
     private static final Log log = LogFactory.getLog(SAMLRequestProcessor.class);
 
     private static final String SECURITY_MANAGER_PROPERTY = org.apache.xerces.impl.Constants.XERCES_PROPERTY_PREFIX +
-                                                            org.apache.xerces.impl.Constants.SECURITY_MANAGER_PROPERTY;
+            org.apache.xerces.impl.Constants.SECURITY_MANAGER_PROPERTY;
+
     @Override
     public String getName() {
         return "SAMLRequestProcessor";
@@ -121,7 +122,7 @@ public class SAMLRequestProcessor extends AbstractMediator {
 
     private AuthnRequest SAMLRequestParser(String samlRequest)
             throws ParserConfigurationException, SAXException, ConfigurationException, IOException,
-                   UnmarshallingException {
+            UnmarshallingException {
 
         IMLUtils.doBootstrap();
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
@@ -136,11 +137,11 @@ public class SAMLRequestProcessor extends AbstractMediator {
         DocumentBuilder docBuilder = documentBuilderFactory.newDocumentBuilder();
         docBuilder.setEntityResolver((publicId, systemId) -> {
             throw new SAXException("SAML request contains invalid elements. Possible XML External Entity " +
-                                   "(XXE) attack.");
+                    "(XXE) attack.");
         });
 
         try (InputStream inputStream = new ByteArrayInputStream(samlRequest.trim().getBytes(StandardCharsets
-                                                                                                    .UTF_8))) {
+                .UTF_8))) {
 
             Document document = docBuilder.parse(inputStream);
             Element element = document.getDocumentElement();

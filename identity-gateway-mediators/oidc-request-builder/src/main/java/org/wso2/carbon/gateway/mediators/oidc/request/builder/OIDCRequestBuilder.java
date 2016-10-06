@@ -31,11 +31,10 @@ import org.wso2.carbon.gateway.core.config.ParameterHolder;
 import org.wso2.carbon.gateway.core.flow.AbstractMediator;
 import org.wso2.carbon.messaging.CarbonCallback;
 import org.wso2.carbon.messaging.CarbonMessage;
-import org.wso2.carbon.messaging.Constants;
 
 import java.net.URI;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -53,6 +52,8 @@ public class OIDCRequestBuilder extends AbstractMediator {
 
     private String logMessage = "Message received at Sample Mediator";
     private Map<String, String> parameters = new HashMap<>();
+
+    private static final Charset UTF_8 = StandardCharsets.UTF_8;
 
     @Override
     public String getName() {
@@ -82,8 +83,7 @@ public class OIDCRequestBuilder extends AbstractMediator {
         Scope scope = Scope.parse(parameters.get(PROPERTY_SCOPE));
 
         String encodedClientID = parameters.get(PROPERTY_CLIENT_ID);
-        String decodedClientID = new String(Base64.getDecoder().decode(encodedClientID.getBytes(
-                StandardCharsets.UTF_8)));
+        String decodedClientID = new String(Base64.getDecoder().decode(encodedClientID.getBytes(UTF_8)), UTF_8);
 
         ClientID clientID = new ClientID(decodedClientID);
         String sessionID = (String) carbonMessage.getProperty("sessionID");
@@ -100,9 +100,9 @@ public class OIDCRequestBuilder extends AbstractMediator {
         URI callback = new URI(parameters.get(PROPERTY_CALLBACK_URL));
 
         AuthenticationRequest authenticationRequest = new AuthenticationRequest(tokenEP, responseType, scope,
-                                                                                clientID, callback, state,
-                                                                                nonce);
-        carbonMessage.setProperty(Constants.HTTP_STATUS_CODE, 302);
+                clientID, callback, state,
+                nonce);
+        carbonMessage.setProperty(org.wso2.carbon.gateway.core.Constants.HTTP_STATUS_CODE, 302);
         carbonMessage.setHeader("Location", authenticationRequest.toURI().toASCIIString());
 
         //TODO: FIGURE THI OUT!!

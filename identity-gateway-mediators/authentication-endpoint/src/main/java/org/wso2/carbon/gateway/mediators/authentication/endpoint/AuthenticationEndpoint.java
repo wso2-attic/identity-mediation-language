@@ -29,6 +29,7 @@ import org.wso2.carbon.messaging.DefaultCarbonMessage;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
@@ -44,6 +45,8 @@ public class AuthenticationEndpoint extends AbstractMediator {
     private static final String PROPERTY_CALLBAK_URL = "callbackurl";
     private String logMessage = "Message received at Authentication Endpoint";
     private Map<String, String> parameters = new HashMap<>();
+
+    private static final Charset UTF_8 = StandardCharsets.UTF_8;
 
     @Override
     public String getName() {
@@ -76,22 +79,22 @@ public class AuthenticationEndpoint extends AbstractMediator {
 
             for (String pair : pairs) {
                 int idx = pair.indexOf("=");
-                queryPairs.put(URLDecoder.decode(pair.substring(0, idx), StandardCharsets.UTF_8.name()),
-                               URLDecoder.decode(pair.substring(idx + 1), StandardCharsets.UTF_8.name()));
+                queryPairs.put(URLDecoder.decode(pair.substring(0, idx), UTF_8.name()),
+                        URLDecoder.decode(pair.substring(idx + 1), UTF_8.name()));
             }
 
             String sessionID = queryPairs.get("state");
             String encodedCallbackURL = queryPairs.get("callbackURL");
 
             if (encodedCallbackURL != null) {
-                callbackURL = URLDecoder.decode(encodedCallbackURL, StandardCharsets.UTF_8.name());
+                callbackURL = URLDecoder.decode(encodedCallbackURL, UTF_8.name());
             }
 
             message = getCarbonMessageWithLoginPage(callbackURL, sessionID);
 
         } else if (carbonMessage.getProperty(org.wso2.carbon.gateway.core.Constants.SERVICE_METHOD).equals("POST")) {
 
-            String contentLength = carbonMessage.getHeader(Constants.HTTP_CONTENT_LENGTH);
+            String contentLength = carbonMessage.getHeader(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_LENGTH);
             byte[] bytes = new byte[Integer.parseInt(contentLength)];
 
             List<ByteBuffer> fullMessageBody = carbonMessage.getFullMessageBody();
@@ -104,8 +107,8 @@ public class AuthenticationEndpoint extends AbstractMediator {
                 offset = offset + duplicate.capacity();
             }
 
-            String encodedParams = new String(bytes);
-            String params = URLDecoder.decode(encodedParams, StandardCharsets.UTF_8.name());
+            String encodedParams = new String(bytes, UTF_8);
+            String params = URLDecoder.decode(encodedParams, UTF_8.name());
             String[] paramsArray = params.split("&");
 
             Map<String, String> paramsMap = new HashMap<>();
@@ -123,13 +126,16 @@ public class AuthenticationEndpoint extends AbstractMediator {
                 message.setStringMessageBody(response);
 
                 Map<String, String> transportHeaders = new HashMap<>();
-                transportHeaders.put(Constants.HTTP_CONNECTION, Constants.KEEP_ALIVE);
-                transportHeaders.put(Constants.HTTP_CONTENT_ENCODING, Constants.GZIP);
-                transportHeaders.put(Constants.HTTP_CONTENT_TYPE, "text/html");
-                transportHeaders.put(Constants.HTTP_CONTENT_LENGTH, (String.valueOf(response.getBytes().length)));
+                transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONNECTION,
+                        org.wso2.carbon.gateway.core.Constants.KEEP_ALIVE);
+                transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_ENCODING,
+                        org.wso2.carbon.gateway.core.Constants.GZIP);
+                transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_TYPE, "text/html");
+                transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_LENGTH,
+                        (String.valueOf(response.getBytes(UTF_8).length)));
 
                 message.setHeaders(transportHeaders);
-                message.setProperty(Constants.HTTP_STATUS_CODE, 302);
+                message.setProperty(org.wso2.carbon.gateway.core.Constants.HTTP_STATUS_CODE, 302);
                 message.setHeader("Location", AuthenticationEndpointUtils.getACSURL(state));
             } else {
                 message = getCarbonMessageWithLoginPage(callbackURL, state);
@@ -173,23 +179,26 @@ public class AuthenticationEndpoint extends AbstractMediator {
     private DefaultCarbonMessage getCarbonMessageWithLoginPage(String callbackURL, String state) {
 
         DefaultCarbonMessage message = new DefaultCarbonMessage();
-        String response = AuthenticationEndpointUtils.LOGIN_PAGE;
+        String response = AuthenticationEndpointUtils.getLoginPage();
 
         response = response.replace("${state}", state);
         response = response.replace("${callbackURL}", callbackURL);
         message.setStringMessageBody(response);
 
-        int contentLength = response.getBytes().length;
+        int contentLength = response.getBytes(UTF_8).length;
 
         Map<String, String> transportHeaders = new HashMap<>();
-        transportHeaders.put(Constants.HTTP_CONNECTION, Constants.KEEP_ALIVE);
-        transportHeaders.put(Constants.HTTP_CONTENT_ENCODING, Constants.GZIP);
-        transportHeaders.put(Constants.HTTP_CONTENT_TYPE, "text/html");
-        transportHeaders.put(Constants.HTTP_CONTENT_LENGTH, (String.valueOf(contentLength)));
+        transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONNECTION,
+                org.wso2.carbon.gateway.core.Constants.KEEP_ALIVE);
+        transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_ENCODING,
+                org.wso2.carbon.gateway.core.Constants.GZIP);
+        transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_TYPE, "text/html");
+        transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_LENGTH,
+                (String.valueOf(contentLength)));
 
         message.setHeaders(transportHeaders);
 
-        message.setProperty(Constants.HTTP_STATUS_CODE, 200);
+        message.setProperty(org.wso2.carbon.gateway.core.Constants.HTTP_STATUS_CODE, 200);
         return message;
 
     }

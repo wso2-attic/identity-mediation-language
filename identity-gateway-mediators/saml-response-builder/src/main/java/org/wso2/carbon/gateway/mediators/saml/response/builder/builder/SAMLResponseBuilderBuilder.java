@@ -18,18 +18,18 @@
 
 package org.wso2.carbon.gateway.mediators.saml.response.builder.builder;
 
-import org.wso2.carbon.gateway.mediators.saml.response.builder.SAMLResponseBuilder;
 import org.wso2.carbon.gateway.core.flow.Mediator;
+import org.wso2.carbon.gateway.mediators.saml.response.builder.SAMLResponseBuilder;
 
 /**
-* Mediator Builder for Java DSL
-*/
+ * Mediator Builder for Java DSL
+ */
 public class SAMLResponseBuilderBuilder {
 
-  public static Mediator action(String message) {
-    SAMLResponseBuilder m = new SAMLResponseBuilder();
-    m.setLogMessage(message);
-    return m;
-  }
+    public static Mediator action(String message) {
+        SAMLResponseBuilder m = new SAMLResponseBuilder();
+        m.setLogMessage(message);
+        return m;
+    }
 }
 

@@ -18,6 +18,9 @@ package org.wso2.carbon.gateway.mediators.oidc.response.processor;
 
 import org.wso2.identity.bus.framework.AuthenticationContext;
 
+/**
+ * DataHolder for oidc-response-processor component.
+ */
 public class OIDCResponseProcessorDataHolder {
     private static OIDCResponseProcessorDataHolder instance = new OIDCResponseProcessorDataHolder();
 

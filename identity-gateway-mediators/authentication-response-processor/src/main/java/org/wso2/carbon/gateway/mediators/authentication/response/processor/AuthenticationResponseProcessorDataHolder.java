@@ -18,6 +18,9 @@ package org.wso2.carbon.gateway.mediators.authentication.response.processor;
 
 import org.wso2.identity.bus.framework.AuthenticationContext;
 
+/**
+ * DataHolder for authentication-response-processor component.
+ */
 public class AuthenticationResponseProcessorDataHolder {
     private static AuthenticationResponseProcessorDataHolder instance = new AuthenticationResponseProcessorDataHolder();
 
