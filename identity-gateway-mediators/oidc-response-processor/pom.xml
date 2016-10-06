@@ -136,6 +136,10 @@
             org.apache.commons.*,
             org.wso2.identity.bus.framework.*,
         </import.package>
+        <carbon.component>
+            osgi.service;
+            objectClass="org.wso2.carbon.gateway.core.flow.MediatorProvider";requiredByComponentName="mediator-provider"
+        </carbon.component>
 
         <com.nimbusds.package.import.version.range>[2.26.1, 2.27)</com.nimbusds.package.import.version.range>
 

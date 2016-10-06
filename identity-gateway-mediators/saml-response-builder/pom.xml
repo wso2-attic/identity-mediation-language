@@ -140,6 +140,10 @@
             org.w3c.dom.*; resolution:=optional,
             org.wso2.identity.bus.framework.*,
         </import.package>
+        <carbon.component>
+            osgi.service;
+            objectClass="org.wso2.carbon.gateway.core.flow.MediatorProvider";requiredByComponentName="mediator-provider"
+        </carbon.component>
 
     </properties>
 
