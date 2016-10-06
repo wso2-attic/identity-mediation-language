@@ -27,21 +27,21 @@ public class IMLUtils {
 
     public static String getHTMLResponseBody(String samlResponse) {
 
-        String responseBody = "<html>\n"+
-                          "\t<body>\n"+
-                          "        \t<p>You are now redirected to $url \n"+
-                          "        \tIf the redirection fails, please click the post button.</p>\n"+
-                          "        \t<form method='post' action='http://localhost:8080/travelocity.com/home.jsp'>\n"+
-                          "       \t\t\t<p>\n"+
-                          "<input type='hidden' name='SAMLResponse' value='" + samlResponse + "'>"+
-                          "        \t\t\t<button type='submit'>POST</button>\n"+
-                          "       \t\t\t</p>\n"+
-                          "       \t\t</form>\n"+
-                          "       \t\t<script type='text/javascript'>\n"+
-                          "        \t\tdocument.forms[0].submit();\n"+
-                          "        \t</script>\n"+
-                          "        </body>\n"+
-                          "</html>";
+        String responseBody = "<html>\n" +
+                "\t<body>\n" +
+                "        \t<p>You are now redirected to $url \n" +
+                "        \tIf the redirection fails, please click the post button.</p>\n" +
+                "        \t<form method='post' action='http://localhost:8080/travelocity.com/home.jsp'>\n" +
+                "       \t\t\t<p>\n" +
+                "<input type='hidden' name='SAMLResponse' value='" + samlResponse + "'>" +
+                "        \t\t\t<button type='submit'>POST</button>\n" +
+                "       \t\t\t</p>\n" +
+                "       \t\t</form>\n" +
+                "       \t\t<script type='text/javascript'>\n" +
+                "        \t\tdocument.forms[0].submit();\n" +
+                "        \t</script>\n" +
+                "        </body>\n" +
+                "</html>";
 
         return responseBody;
     }

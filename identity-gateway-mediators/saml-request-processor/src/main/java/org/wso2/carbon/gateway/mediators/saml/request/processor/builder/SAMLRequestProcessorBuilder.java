@@ -18,18 +18,18 @@
 
 package org.wso2.carbon.gateway.mediators.saml.request.processor.builder;
 
-import org.wso2.carbon.gateway.mediators.saml.request.processor.SAMLRequestProcessor;
 import org.wso2.carbon.gateway.core.flow.Mediator;
+import org.wso2.carbon.gateway.mediators.saml.request.processor.SAMLRequestProcessor;
 
 /**
-* Mediator Builder for Java DSL
-*/
+ * Mediator Builder for Java DSL
+ */
 public class SAMLRequestProcessorBuilder {
 
-  public static Mediator action(String message) {
-    SAMLRequestProcessor m = new SAMLRequestProcessor();
-    m.setLogMessage(message);
-    return m;
-  }
+    public static Mediator action(String message) {
+        SAMLRequestProcessor m = new SAMLRequestProcessor();
+        m.setLogMessage(message);
+        return m;
+    }
 }
 

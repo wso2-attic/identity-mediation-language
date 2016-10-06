@@ -17,11 +17,12 @@
 package org.wso2.carbon.gateway.mediators.authentication.request.builder.util;
 
 import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Util class for AuthenticationRequestBuilder.
+ */
 public class AuthenticationRequestBuilderUtils {
 
     public static String buildAuthenticationEndpointURL(String url, String state, String callbackURL)

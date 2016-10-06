@@ -46,8 +46,6 @@ import org.opensaml.saml2.core.impl.AudienceBuilder;
 import org.opensaml.saml2.core.impl.AudienceRestrictionBuilder;
 import org.opensaml.saml2.core.impl.AuthnContextBuilder;
 import org.opensaml.saml2.core.impl.AuthnContextClassRefBuilder;
-import org.opensaml.saml2.core.impl.AuthnRequestBuilder;
-import org.opensaml.saml2.core.impl.AuthnRequestImpl;
 import org.opensaml.saml2.core.impl.AuthnStatementBuilder;
 import org.opensaml.saml2.core.impl.ConditionsBuilder;
 import org.opensaml.saml2.core.impl.NameIDBuilder;
@@ -81,6 +79,7 @@ import org.wso2.identity.bus.framework.AuthenticationContext;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.Base64;
@@ -97,6 +96,8 @@ public class SAMLResponseBuilder extends AbstractMediator {
 
     private static final Logger log = LoggerFactory.getLogger(SAMLResponseBuilder.class);
     private String logMessage = "Message received at Sample Mediator";   // Sample Mediator specific variable
+
+    private static final Charset UTF_8 = StandardCharsets.UTF_8;
 
 
     @Override
@@ -133,17 +134,20 @@ public class SAMLResponseBuilder extends AbstractMediator {
         String response = SAMLResponseBuilderUtils.getHTMLResponseBody(samlResponse);
         message.setStringMessageBody(response);
 
-        int contentLength = response.getBytes().length;
+        int contentLength = response.getBytes(UTF_8).length;
 
         Map<String, String> transportHeaders = new HashMap<>();
-        transportHeaders.put(Constants.HTTP_CONNECTION, Constants.KEEP_ALIVE);
-        transportHeaders.put(Constants.HTTP_CONTENT_ENCODING, Constants.GZIP);
-        transportHeaders.put(Constants.HTTP_CONTENT_TYPE, "text/html");
-        transportHeaders.put(Constants.HTTP_CONTENT_LENGTH, (String.valueOf(contentLength)));
+        transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONNECTION,
+                org.wso2.carbon.gateway.core.Constants.KEEP_ALIVE);
+        transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_ENCODING,
+                org.wso2.carbon.gateway.core.Constants.GZIP);
+        transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_TYPE, "text/html");
+        transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_LENGTH,
+                (String.valueOf(contentLength)));
 
         message.setHeaders(transportHeaders);
 
-        message.setProperty(Constants.HTTP_STATUS_CODE, 200);
+        message.setProperty(org.wso2.carbon.gateway.core.Constants.HTTP_STATUS_CODE, 200);
         message.setProperty(Constants.DIRECTION, Constants.DIRECTION_RESPONSE);
         message.setProperty(Constants.CALL_BACK, carbonCallback);
 
@@ -172,8 +176,8 @@ public class SAMLResponseBuilder extends AbstractMediator {
 
     private String buildSAMLResponse(AuthnRequest authnRequest, Map<String, Object> authenticationContext,
                                      CarbonMessage carbonMessage) throws
-                                                                                             ConfigurationException,
-                                                                                             ParseException {
+            ConfigurationException,
+            ParseException {
 
         String destination = "http://localhost:8080/travelocity.com/home.jsp";
 
@@ -212,7 +216,7 @@ public class SAMLResponseBuilder extends AbstractMediator {
         //TODO Get NameID value from JWT
 
         Map<String, String> subjectMap = (Map<String, String>) authenticationContext.get("subject");
-        Map.Entry<String,String> subjectEntry = subjectMap.entrySet().iterator().next();
+        Map.Entry<String, String> subjectEntry = subjectMap.entrySet().iterator().next();
         nameId.setValue(subjectEntry.getValue());
         nameId.setFormat(NameID.UNSPECIFIED);
 
@@ -258,7 +262,8 @@ public class SAMLResponseBuilder extends AbstractMediator {
 
                 XSStringBuilder stringBuilder = (XSStringBuilder) Configuration.getBuilderFactory().getBuilder
                         (XSString.TYPE_NAME);
-                XSString stringValue = stringBuilder.buildObject(AttributeValue.DEFAULT_ELEMENT_NAME, XSString.TYPE_NAME);
+                XSString stringValue =
+                        stringBuilder.buildObject(AttributeValue.DEFAULT_ELEMENT_NAME, XSString.TYPE_NAME);
                 stringValue.setValue(entry.getValue());
                 attribute.getAttributeValues().add(stringValue);
                 attributeStatement.getAttributes().add(attribute);
@@ -285,23 +290,23 @@ public class SAMLResponseBuilder extends AbstractMediator {
         boolean doEncryptAssertion = false;
         boolean doSignResponse = false;
 
-        if (doSignAssertion) {
-            //TODO Assertion signing
-        }
-
-        if (doEncryptAssertion) {
-            //TODO Assertion encrypting
-        }
-
-        if (doSignResponse) {
-            //TODO Response signing
-        }
+//        if (doSignAssertion) {
+//            //TODO Assertion signing
+//        }
+//
+//        if (doEncryptAssertion) {
+//            //TODO Assertion encrypting
+//        }
+//
+//        if (doSignResponse) {
+//            //TODO Response signing
+//        }
 
         response.getAssertions().add(assertion);
 
         String samlResponse = marshall(response);
-        String encodedResponse = Base64.getEncoder().encodeToString(samlResponse.getBytes(StandardCharsets.UTF_8));
-        return encodedResponse;
+        // TODO fix this by adding proper error handling to marshall method.
+        return Base64.getEncoder().encodeToString(samlResponse.getBytes(UTF_8));
 
     }
 
@@ -312,7 +317,7 @@ public class SAMLResponseBuilder extends AbstractMediator {
 
         try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
             System.setProperty("javax.xml.parsers.DocumentBuilderFactory", "org.apache.xerces.jaxp" +
-                                                                           ".DocumentBuilderFactoryImpl");
+                    ".DocumentBuilderFactoryImpl");
             MarshallerFactory marshallerFactory = org.opensaml.xml.Configuration.getMarshallerFactory();
             Marshaller marshaller = marshallerFactory.getMarshaller(xmlObject);
             Element element = marshaller.marshall(xmlObject);
@@ -326,7 +331,7 @@ public class SAMLResponseBuilder extends AbstractMediator {
             output.setByteStream(byteArrayOutputStream);
             serializer.write(element, output);
 
-            return byteArrayOutputStream.toString(StandardCharsets.UTF_8.name());
+            return byteArrayOutputStream.toString(UTF_8.name());
 
         } catch (MarshallingException | IOException | ClassNotFoundException | InstantiationException |
                 IllegalAccessException e) {

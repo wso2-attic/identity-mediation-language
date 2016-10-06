@@ -55,7 +55,6 @@ public class SAMLtoOIDCDSL extends JavaConfigurationBuilder {
     }
 
 
-
 }
 
 

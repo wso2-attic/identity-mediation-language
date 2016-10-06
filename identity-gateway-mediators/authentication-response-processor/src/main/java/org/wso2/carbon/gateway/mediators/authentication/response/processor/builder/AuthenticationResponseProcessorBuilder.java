@@ -18,18 +18,18 @@
 
 package org.wso2.carbon.gateway.mediators.authentication.response.processor.builder;
 
-import org.wso2.carbon.gateway.mediators.authentication.response.processor.AuthenticationResponseProcessor;
 import org.wso2.carbon.gateway.core.flow.Mediator;
+import org.wso2.carbon.gateway.mediators.authentication.response.processor.AuthenticationResponseProcessor;
 
 /**
-* Mediator Builder for Java DSL
-*/
+ * Mediator Builder for Java DSL
+ */
 public class AuthenticationResponseProcessorBuilder {
 
-  public static Mediator action(String message) {
-    AuthenticationResponseProcessor m = new AuthenticationResponseProcessor();
-    m.setLogMessage(message);
-    return m;
-  }
+    public static Mediator action(String message) {
+        AuthenticationResponseProcessor m = new AuthenticationResponseProcessor();
+        m.setLogMessage(message);
+        return m;
+    }
 }
 

@@ -18,18 +18,18 @@
 
 package org.wso2.carbon.gateway.mediators.oidc.response.processor.builder;
 
-import org.wso2.carbon.gateway.mediators.oidc.response.processor.OIDCResponseProcessor;
 import org.wso2.carbon.gateway.core.flow.Mediator;
+import org.wso2.carbon.gateway.mediators.oidc.response.processor.OIDCResponseProcessor;
 
 /**
-* Mediator Builder for Java DSL
-*/
+ * Mediator Builder for Java DSL
+ */
 public class OIDCResponseProcessorBuilder {
 
-  public static Mediator action(String message) {
-    OIDCResponseProcessor m = new OIDCResponseProcessor();
-    m.setLogMessage(message);
-    return m;
-  }
+    public static Mediator action(String message) {
+        OIDCResponseProcessor m = new OIDCResponseProcessor();
+        m.setLogMessage(message);
+        return m;
+    }
 }
 

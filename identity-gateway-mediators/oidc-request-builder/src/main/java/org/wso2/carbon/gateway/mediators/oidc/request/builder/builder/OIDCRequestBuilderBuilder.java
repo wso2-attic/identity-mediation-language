@@ -18,18 +18,18 @@
 
 package org.wso2.carbon.gateway.mediators.oidc.request.builder.builder;
 
-import org.wso2.carbon.gateway.mediators.oidc.request.builder.OIDCRequestBuilder;
 import org.wso2.carbon.gateway.core.flow.Mediator;
+import org.wso2.carbon.gateway.mediators.oidc.request.builder.OIDCRequestBuilder;
 
 /**
-* Mediator Builder for Java DSL
-*/
+ * Mediator Builder for Java DSL
+ */
 public class OIDCRequestBuilderBuilder {
 
-  public static Mediator action(String message) {
-    OIDCRequestBuilder m = new OIDCRequestBuilder();
-    m.setLogMessage(message);
-    return m;
-  }
+    public static Mediator action(String message) {
+        OIDCRequestBuilder m = new OIDCRequestBuilder();
+        m.setLogMessage(message);
+        return m;
+    }
 }
 

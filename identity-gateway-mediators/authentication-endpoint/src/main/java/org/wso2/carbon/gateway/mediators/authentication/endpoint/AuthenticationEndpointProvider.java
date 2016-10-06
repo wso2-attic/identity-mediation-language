@@ -25,8 +25,8 @@ import org.wso2.carbon.gateway.core.flow.Mediator;
 import org.wso2.carbon.gateway.core.flow.MediatorProvider;
 
 /**
-* Mediator Provider Implementation
-*/
+ * Mediator Provider Implementation
+ */
 @Component(
         name = "AuthenticationEndpointProvider",
         immediate = true,
@@ -34,18 +34,18 @@ import org.wso2.carbon.gateway.core.flow.MediatorProvider;
 )
 public class AuthenticationEndpointProvider implements MediatorProvider {
 
-  @Activate
-  protected void start(BundleContext bundleContext) {
-  }
+    @Activate
+    protected void start(BundleContext bundleContext) {
+    }
 
-  @Override
-  public String getName() {
-    return "AuthenticationEndpoint";
-  }
+    @Override
+    public String getName() {
+        return "AuthenticationEndpoint";
+    }
 
-  @Override
-  public Mediator getMediator() {
-    return new AuthenticationEndpoint();
-  }
+    @Override
+    public Mediator getMediator() {
+        return new AuthenticationEndpoint();
+    }
 
 }

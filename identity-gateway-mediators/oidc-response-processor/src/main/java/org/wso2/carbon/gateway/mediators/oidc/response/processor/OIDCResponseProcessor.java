@@ -35,9 +35,11 @@ import org.wso2.identity.bus.framework.AuthenticationContext;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 
@@ -52,6 +54,8 @@ public class OIDCResponseProcessor extends AbstractMediator {
     private static final String PROPERTY_IS_ATTRIBUTE = "isAttribute";
     private String logMessage = "Message received at Sample Mediator";   // Sample Mediator specific variable
     private Map<String, String> parameters = new HashMap<>();
+
+    private static final Charset UTF_8 = StandardCharsets.UTF_8;
 
 
     @Override
@@ -85,43 +89,47 @@ public class OIDCResponseProcessor extends AbstractMediator {
                 // param instead of a URL fragment. Ideally we will not be needing the logic inside the 'try' block.
                 successResponse = AuthenticationSuccessResponse.parse(new URI((String) carbonMessage.getProperty
                         (Constants.TO)));
-                Map<String, String> query_pairs = new HashMap<>();
+                Map<String, String> queryPairMap = new HashMap<>();
                 URI uri = new URI((String) carbonMessage.getProperty(Constants.TO));
                 String query = uri.getQuery();
                 String[] pairs = query.split("&");
 
                 for (String pair : pairs) {
                     int idx = pair.indexOf("=");
-                    query_pairs.put(URLDecoder.decode(pair.substring(0, idx), StandardCharsets.UTF_8.name()),
-                                    URLDecoder.decode(pair.substring(idx + 1), StandardCharsets.UTF_8.name()));
+                    queryPairMap.put(URLDecoder.decode(pair.substring(0, idx), UTF_8.name()),
+                            URLDecoder.decode(pair.substring(idx + 1), UTF_8.name()));
                 }
 
-                state = query_pairs.get("state");
+                state = queryPairMap.get("state");
 
             } catch (ParseException e) {
 
-                URI uri = new URI(carbonMessage.getProperty(Constants.PROTOCOL).toString().toLowerCase(),
-                                  null,
-                                  carbonMessage.getProperty(Constants.HOST).toString(),
-                                  Integer.parseInt(carbonMessage.getProperty(Constants.LISTENER_PORT).toString()),
-                                  carbonMessage.getProperty(Constants.TO).toString(),
-                                  null,
-                                  null);
+                URI uri = new URI(
+                        carbonMessage.getProperty(Constants.PROTOCOL).toString().toLowerCase(Locale.getDefault()),
+                        null,
+                        carbonMessage.getProperty(Constants.HOST).toString(),
+                        Integer.parseInt(carbonMessage.getProperty(Constants.LISTENER_PORT).toString()),
+                        carbonMessage.getProperty(Constants.TO).toString(),
+                        null,
+                        null);
 
                 String response = getJavascript(uri.toASCIIString());
                 message.setStringMessageBody(response);
 
-                int contentLength = response.getBytes().length;
+                int contentLength = response.getBytes(UTF_8).length;
 
                 Map<String, String> transportHeaders = new HashMap<>();
-                transportHeaders.put(Constants.HTTP_CONNECTION, Constants.KEEP_ALIVE);
-                transportHeaders.put(Constants.HTTP_CONTENT_ENCODING, Constants.GZIP);
-                transportHeaders.put(Constants.HTTP_CONTENT_TYPE, "text/html");
-                transportHeaders.put(Constants.HTTP_CONTENT_LENGTH, (String.valueOf(contentLength)));
+                transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONNECTION,
+                        org.wso2.carbon.gateway.core.Constants.KEEP_ALIVE);
+                transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_ENCODING,
+                        org.wso2.carbon.gateway.core.Constants.GZIP);
+                transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_TYPE, "text/html");
+                transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_LENGTH,
+                        (String.valueOf(contentLength)));
 
                 message.setHeaders(transportHeaders);
 
-                message.setProperty(Constants.HTTP_STATUS_CODE, 200);
+                message.setProperty(org.wso2.carbon.gateway.core.Constants.HTTP_STATUS_CODE, 200);
                 message.setProperty(Constants.DIRECTION, Constants.DIRECTION_RESPONSE);
                 message.setProperty(Constants.CALL_BACK, carbonCallback);
 
@@ -130,7 +138,7 @@ public class OIDCResponseProcessor extends AbstractMediator {
             }
         } else if (carbonMessage.getProperty(org.wso2.carbon.gateway.core.Constants.SERVICE_METHOD).equals("POST")) {
 
-            String contentLength = carbonMessage.getHeader(Constants.HTTP_CONTENT_LENGTH);
+            String contentLength = carbonMessage.getHeader(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_LENGTH);
             byte[] bytes = new byte[Integer.parseInt(contentLength)];
 
             List<ByteBuffer> fullMessageBody = carbonMessage.getFullMessageBody();
@@ -145,8 +153,8 @@ public class OIDCResponseProcessor extends AbstractMediator {
 
             message.setStringMessageBody("");
 
-            String encodedParams = new String(bytes);
-            String fragment = URLDecoder.decode(encodedParams, StandardCharsets.UTF_8.name()).split("=", 2)[1];
+            String encodedParams = new String(bytes, UTF_8);
+            String fragment = URLDecoder.decode(encodedParams, UTF_8.name()).split("=", 2)[1];
             successResponse = AuthenticationSuccessResponse.parse(new URI(carbonMessage.getProperty
                     (Constants.TO) + "#" + fragment));
             state = successResponse.getState().getValue();
@@ -183,23 +191,19 @@ public class OIDCResponseProcessor extends AbstractMediator {
             final String finalSubjectClaim = subjectClaim;
             final String finalSubjectClaimValue = subjectClaimValue;
 
-            responseContext.put("subject", new HashMap<String, String>() {
-                {
-                    put(finalSubjectClaim, finalSubjectClaimValue);
-                }
-            });
+            Map<String, String> subjectClaimMap = new HashMap<>();
+            subjectClaimMap.put(finalSubjectClaim, finalSubjectClaimValue);
+            responseContext.put("subject", subjectClaimMap);
 
             authenticationContext.addToContext(state, responseContext);
         }
+
         if (Boolean.parseBoolean(parameters.get(PROPERTY_IS_ATTRIBUTE))) {
             Map<String, Object> responseContext = (Map<String, Object>) authenticationContext.getFromContext(state);
-            responseContext.put("attributes", new HashMap<String, String>() {
-                {
-                    for (Map.Entry<String, Object> entry : jwtClaimsSet.getCustomClaims().entrySet()) {
-                        put(entry.getKey(), entry.getValue().toString());
-                    }
-                }
-            });
+
+            Map<String, String> attributeMap = new HashMap<>();
+            jwtClaimsSet.getCustomClaims().forEach((key, value) -> attributeMap.put(key, value.toString()));
+            responseContext.put("attributes", attributeMap);
 
             authenticationContext.addToContext(state, responseContext);
         }
@@ -239,26 +243,26 @@ public class OIDCResponseProcessor extends AbstractMediator {
 
     private static String getJavascript(String callbackURL) {
         String responseBody = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3" +
-                              ".org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n" +
-                              "\n" +
-                              "<html>\n" +
-                              "    <head>\n" +
-                              "        <title></title>\n" +
-                              "    </head>\n" +
-                              "    <body>\n" +
-                              "        <p>You are now redirected to $url If the redirection fails, please click the " +
-                              "post button.</p>\n" +
-                              "        <form action='" + callbackURL + "' method='post'>\n" +
-                              "            <p><input name='fragment' id='id_token' type='hidden' value=''> <button " +
-                              "type='submit'>POST</button></p>\n" +
-                              "        </form>\n" +
-                              "        <script type='text/javascript'>\n" +
-                              "            document.getElementById('id_token').value = window.location.hash.substring" +
-                              "(1);\n" +
-                              "            document.forms[0].submit();\n" +
-                              "        </script>\n" +
-                              "    </body>\n" +
-                              "</html>";
+                ".org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n" +
+                "\n" +
+                "<html>\n" +
+                "    <head>\n" +
+                "        <title></title>\n" +
+                "    </head>\n" +
+                "    <body>\n" +
+                "        <p>You are now redirected to $url If the redirection fails, please click the " +
+                "post button.</p>\n" +
+                "        <form action='" + callbackURL + "' method='post'>\n" +
+                "            <p><input name='fragment' id='id_token' type='hidden' value=''> <button " +
+                "type='submit'>POST</button></p>\n" +
+                "        </form>\n" +
+                "        <script type='text/javascript'>\n" +
+                "            document.getElementById('id_token').value = window.location.hash.substring" +
+                "(1);\n" +
+                "            document.forms[0].submit();\n" +
+                "        </script>\n" +
+                "    </body>\n" +
+                "</html>";
 
         return responseBody;
     }

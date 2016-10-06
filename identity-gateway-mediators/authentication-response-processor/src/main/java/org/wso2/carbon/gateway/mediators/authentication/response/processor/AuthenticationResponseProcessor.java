@@ -32,11 +32,13 @@ import org.wso2.identity.bus.framework.AuthenticationContext;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 
@@ -52,6 +54,7 @@ public class AuthenticationResponseProcessor extends AbstractMediator {
     private String logMessage = "Message received at Sample Mediator";   // Sample Mediator specific variable
     private Map<String, String> parameters = new HashMap<>();
 
+    private static final Charset UTF_8 = StandardCharsets.UTF_8;
 
     @Override
     public String getName() {
@@ -71,7 +74,7 @@ public class AuthenticationResponseProcessor extends AbstractMediator {
     public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) throws Exception {
         log.info("Invoking AuthenticationResponseProcessor Mediator");
 
-        String contentLength = carbonMessage.getHeader(Constants.HTTP_CONTENT_LENGTH);
+        String contentLength = carbonMessage.getHeader(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_LENGTH);
         byte[] bytes = new byte[Integer.parseInt(contentLength)];
 
         List<ByteBuffer> fullMessageBody = carbonMessage.getFullMessageBody();
@@ -87,8 +90,8 @@ public class AuthenticationResponseProcessor extends AbstractMediator {
         DefaultCarbonMessage message = new DefaultCarbonMessage();
         message.setStringMessageBody("");
 
-        String encodedParams = new String(bytes);
-        String params = URLDecoder.decode(encodedParams, StandardCharsets.UTF_8.name());
+        String encodedParams = new String(bytes, UTF_8);
+        String params = URLDecoder.decode(encodedParams, UTF_8.name());
         String[] paramsArray = params.split("&");
 
         Map<String, String> paramsMap = new HashMap<>();
@@ -115,22 +118,20 @@ public class AuthenticationResponseProcessor extends AbstractMediator {
 
             if (Boolean.parseBoolean(parameters.get(PROPERTY_IS_SUBJECT))) {
                 Map<String, Object> responseContext = (Map<String, Object>) authenticationContext.getFromContext(state);
-                responseContext.put("subject", new HashMap<String, String>() {
-                    {
-                        put("username", username);
-                    }
-                });
 
+                Map<String, String> subjectMap = new HashMap<>();
+                subjectMap.put("username", username);
+                responseContext.put("subject", subjectMap);
 
                 authenticationContext.addToContext(state, responseContext);
             }
+
             if (Boolean.parseBoolean(parameters.get(PROPERTY_IS_ATTRIBUTE))) {
                 Map<String, Object> responseContext = (Map<String, Object>) authenticationContext.getFromContext(state);
-                responseContext.put("attributes", new HashMap<String, String>() {
-                    {
-                        put("role", role);
-                    }
-                });
+
+                Map<String, String> roleMap = new HashMap<>();
+                roleMap.put("role", role);
+                responseContext.put("attributes", roleMap);
 
                 authenticationContext.addToContext(state, responseContext);
             }
@@ -143,21 +144,25 @@ public class AuthenticationResponseProcessor extends AbstractMediator {
             message.setHeader("isAuthenticated", "false");
 
             Map<String, String> transportHeaders = new HashMap<>();
-            transportHeaders.put(Constants.HTTP_CONNECTION, Constants.KEEP_ALIVE);
-            transportHeaders.put(Constants.HTTP_CONTENT_ENCODING, Constants.GZIP);
-            transportHeaders.put(Constants.HTTP_CONTENT_TYPE, "text/html");
-            transportHeaders.put(Constants.HTTP_CONTENT_LENGTH, (String.valueOf(response.getBytes().length)));
+            transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONNECTION,
+                    org.wso2.carbon.gateway.core.Constants.KEEP_ALIVE);
+            transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_ENCODING,
+                    org.wso2.carbon.gateway.core.Constants.GZIP);
+            transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_TYPE,
+                    "text/html");
+            transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_LENGTH,
+                    (String.valueOf(response.getBytes(UTF_8).length)));
 
             message.setHeaders(transportHeaders);
-            message.setProperty(Constants.HTTP_STATUS_CODE, 302);
+            message.setProperty(org.wso2.carbon.gateway.core.Constants.HTTP_STATUS_CODE, 302);
 
-            URI uri = new URI(carbonMessage.getProperty(Constants.PROTOCOL).toString().toLowerCase(),
-                              null,
-                              carbonMessage.getProperty(Constants.HOST).toString(),
-                              Integer.parseInt(carbonMessage.getProperty(Constants.LISTENER_PORT).toString()),
-                              carbonMessage.getProperty(Constants.TO).toString(),
-                              null,
-                              null);
+            URI uri = new URI(carbonMessage.getProperty(Constants.PROTOCOL).toString().toLowerCase(Locale.getDefault()),
+                    null,
+                    carbonMessage.getProperty(Constants.HOST).toString(),
+                    Integer.parseInt(carbonMessage.getProperty(Constants.LISTENER_PORT).toString()),
+                    carbonMessage.getProperty(Constants.TO).toString(),
+                    null,
+                    null);
 
             message.setHeader("Location", AuthenticationResponseProcessorUtils.
                     getAuthenticationEndpointURL(state, uri.toASCIIString()));
@@ -186,7 +191,6 @@ public class AuthenticationResponseProcessor extends AbstractMediator {
             }
         }
     }
-
 
 
     /**

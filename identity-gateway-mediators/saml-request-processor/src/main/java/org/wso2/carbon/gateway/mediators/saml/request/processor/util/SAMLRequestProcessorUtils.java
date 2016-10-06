@@ -21,6 +21,9 @@ import org.opensaml.xml.ConfigurationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Util class for SAMLRequestProcessor
+ */
 public class SAMLRequestProcessorUtils {
 
     private static boolean isBootStrapped = false;

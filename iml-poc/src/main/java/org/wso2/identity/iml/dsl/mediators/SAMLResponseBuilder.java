@@ -127,8 +127,8 @@ public class SAMLResponseBuilder extends AbstractMediator {
 
 
     private String buildSAMLResponse(AuthnRequest authnRequest, CarbonMessage carbonMessage) throws
-                                                                                             ConfigurationException,
-                                                                                             ParseException {
+            ConfigurationException,
+            ParseException {
 
         String destination = "http://localhost:8080/travelocity.com/home.jsp";
 
@@ -252,7 +252,7 @@ public class SAMLResponseBuilder extends AbstractMediator {
 
         try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
             System.setProperty("javax.xml.parsers.DocumentBuilderFactory", "org.apache.xerces.jaxp" +
-                                                                           ".DocumentBuilderFactoryImpl");
+                    ".DocumentBuilderFactoryImpl");
             MarshallerFactory marshallerFactory = org.opensaml.xml.Configuration.getMarshallerFactory();
             Marshaller marshaller = marshallerFactory.getMarshaller(xmlObject);
             Element element = marshaller.marshall(xmlObject);

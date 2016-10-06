@@ -18,6 +18,9 @@ package org.wso2.carbon.gateway.mediators.saml.response.builder;
 
 import org.wso2.identity.bus.framework.AuthenticationContext;
 
+/**
+ * DataHolder for saml-response-builder component.
+ */
 public class SAMLResponseBuilderDataHolder {
     private static SAMLResponseBuilderDataHolder instance = new SAMLResponseBuilderDataHolder();
 

@@ -31,8 +31,8 @@ import org.wso2.identity.bus.framework.AuthenticationContext;
 import java.util.Map;
 
 /**
-* Mediator Provider Implementation
-*/
+ * Mediator Provider Implementation
+ */
 @Component(
         name = "OIDCRequestBuilderProvider",
         immediate = true,
@@ -40,9 +40,9 @@ import java.util.Map;
 )
 public class OIDCRequestBuilderProvider implements MediatorProvider {
 
-  @Activate
-  protected void start(BundleContext bundleContext) {
-  }
+    @Activate
+    protected void start(BundleContext bundleContext) {
+    }
 
     @Reference(
             name = "AuthenticationContext",
@@ -57,14 +57,15 @@ public class OIDCRequestBuilderProvider implements MediatorProvider {
 
     protected void unregister(AuthenticationContext authenticationContext) {
     }
-  @Override
-  public String getName() {
-    return "OIDCRequestBuilder";
-  }
 
-  @Override
-  public Mediator getMediator() {
-    return new OIDCRequestBuilder();
-  }
+    @Override
+    public String getName() {
+        return "OIDCRequestBuilder";
+    }
+
+    @Override
+    public Mediator getMediator() {
+        return new OIDCRequestBuilder();
+    }
 
 }

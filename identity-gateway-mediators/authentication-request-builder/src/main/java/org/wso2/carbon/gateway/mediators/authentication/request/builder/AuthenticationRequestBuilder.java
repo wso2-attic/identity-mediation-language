@@ -28,6 +28,8 @@ import org.wso2.carbon.messaging.CarbonMessage;
 import org.wso2.carbon.messaging.Constants;
 import org.wso2.carbon.messaging.DefaultCarbonMessage;
 
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,6 +44,8 @@ public class AuthenticationRequestBuilder extends AbstractMediator {
     private static final String PROPERTY_CALLBACK_URL = "callbackURL";
     private String logMessage = "Message received at Sample Mediator";   // Sample Mediator specific variable
     private Map<String, String> parameters = new HashMap<>();
+
+    private static final Charset UTF_8 = StandardCharsets.UTF_8;
 
     @Override
     public String getName() {
@@ -73,13 +77,16 @@ public class AuthenticationRequestBuilder extends AbstractMediator {
         }
 
         Map<String, String> transportHeaders = new HashMap<>();
-        transportHeaders.put(Constants.HTTP_CONNECTION, Constants.KEEP_ALIVE);
-        transportHeaders.put(Constants.HTTP_CONTENT_ENCODING, Constants.GZIP);
-        transportHeaders.put(Constants.HTTP_CONTENT_TYPE, "text/html");
-        transportHeaders.put(Constants.HTTP_CONTENT_LENGTH, (String.valueOf(response.getBytes().length)));
+        transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONNECTION,
+                org.wso2.carbon.gateway.core.Constants.KEEP_ALIVE);
+        transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_ENCODING,
+                org.wso2.carbon.gateway.core.Constants.GZIP);
+        transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_TYPE, "text/html");
+        transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_LENGTH,
+                (String.valueOf(response.getBytes(UTF_8).length)));
 
         message.setHeaders(transportHeaders);
-        message.setProperty(Constants.HTTP_STATUS_CODE, 302);
+        message.setProperty(org.wso2.carbon.gateway.core.Constants.HTTP_STATUS_CODE, 302);
 
         String authenticationEndpoint = parameters.get(PROPERTY_AUTHENTICATION_ENDPOINT);
         String callbackURL = parameters.get(PROPERTY_CALLBACK_URL);

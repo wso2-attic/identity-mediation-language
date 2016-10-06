@@ -70,8 +70,8 @@ public class OIDCRequestBuilder extends AbstractMediator {
         URI tokenEP = new URI("https://localhost:9444/oauth2/authorize");
         URI callback = new URI("http://localhost:8280/sample/request");
         AuthenticationRequest authenticationRequest = new AuthenticationRequest(tokenEP, responseType, scope,
-                                                                                clientID, callback, state,
-                                                                                nonce);
+                clientID, callback, state,
+                nonce);
         carbonMessage.setProperty(Constants.HTTP_STATUS_CODE, 302);
         carbonMessage.setHeader("Location", authenticationRequest.toURI().toASCIIString());
 
