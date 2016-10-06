@@ -39,11 +39,6 @@
 
     <dependencyManagement>
         <dependencies>
-            <dependency>
-                <groupId>org.wso2.carbon.transport</groupId>
-                <artifactId>org.wso2.carbon.transport.parent</artifactId>
-                <version>${carbon.transport.version}</version>
-            </dependency>
         </dependencies>
     </dependencyManagement>
 
