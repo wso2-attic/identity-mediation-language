@@ -1,0 +1,78 @@
+@Source (protocol="http", host="localhost", port="8290")
+@basePath ("/travelocity")
+package org.wso2.travelocity;
+
+const endpoint authenticationEp = "http://localhost:8290/authenticate/";
+const endpoint callbackURL = "http://localhost:8290/travelocity/localauth";
+
+const endpoint tokenEp = "https://accounts.google.com/o/oauth2/v2/auth";
+const endpoint oidcCallbackURL = "http://ibus.wso2.com:8290/travelocity/oidc";
+const string clientID = "MzAxMDY1MjUwMTM0LXRsdXE0cHBkYTEyNGxscHMyN3F1bTlsc203dXZqNG5wLmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29t"
+
+
+@POST
+@Path ("/saml")
+resource saml (message m) {
+	// receive message, build SAML request and add sessionID to AuthenticationContext
+	m = SAMLRequestProcessor(m);
+
+	// build Authentication request to be send to the Authentication Endpoint
+	message authReq; 
+	try {
+		// create message to redirect to authenticationEndpoint (ie. set 302 Location header)
+		authReq = buildAuthenticationRequest(m, authenticationEp, callbackURL );
+	} catch (exception e) {
+		authReq = new message();
+		authReq.setHeader(HTTP.StatusCode, 500);
+		authReq.setPayload(Type.JSON, {"error":"backend failed"});
+	}
+    
+	// redirect the authentication endpoint
+	reply authReq;
+}
+
+@POST
+@Path ("/localauth")
+resource localauth (message m) {
+	try {	
+		// talk to the user store and authenticate the user based on params sent from the authenticationEndpoint
+		m = AuthenticationResponseProcessor(m, "isSubject=true,subjectClaim=username,isAttribute=true");
+	} catch (exception e) {
+		message response;
+		// if authentication failed we redirect to the login page again.
+		if (m.getHeader("isAuthenticated").getValue() == "false") {
+			response = authReq = buildAuthenticationRequest (m, authenticationEp, callbackURL);	
+		} else {
+			response = new message();
+			message.setHeader(HTTP.StatusCode, 500);
+			message.setPayload(Type.JSON, {"error":"backend failed"});
+		}
+
+		reply response;
+	}
+
+	// build the OIDC request to be sent to the Federated IDP (Google)
+	m = OIDCRequestBuilder(m, "scope=openid email profile,tokenep=https://accounts.google.com/o/oauth2/v2/auth,callbackurl=http://ibus.wso2.com:8290/travelocity/oidc,clientid= MzAxMDY1MjUwMTM0LXRsdXE0cHBkYTEyNGxscHMyN3F1bTlsc203dXZqNG5wLmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29t");
+
+	reply m;
+}
+
+@POST
+@GET
+@Path ("/oidc")
+resource oidc (message m) {
+	// process the OIDC response
+	m = OIDCResponseProcessor(m, "isSubject=true,subjectClaim=email,isAttribute=true")
+
+	// send the saml response
+	message samlResponse = SAMLResponseBuilder(m)
+
+    // set required headers
+	samlResponse.setHeader(HTTP.Connection, "keep-alive");
+	samlResponse.setHeader(HTTP.Content_Encoding, "gzip");
+	samlResponse.setHeader(HTTP.Content_Type, "text/html");
+	samlResponse.setHeader(HTTP.Content_Length, message.getContentLength());
+	samlResponse.setHeader(HTTP.StatusCode, 200);	
+
+	reply samlResponse;  
+} 

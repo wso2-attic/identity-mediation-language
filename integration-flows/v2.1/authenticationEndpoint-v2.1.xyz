@@ -1,0 +1,42 @@
+@Path ("/authenticate")
+@Source (protocol="http", host="localhost", port="8080")
+@Api (description = "Authentication Endpoint")
+
+package org.wso2.iml.auth;
+
+@GET
+@POST
+resource authenticationEndpoint (message m) {
+	message response;
+	try { 
+		// build the login Page message using a subroutine.
+		response = buildLoginPage(m);
+	} catch (exception ex) {
+		response = new message();
+		response.setHeader(HTTP.StatusCode, 500);
+		response.setPayload(Type.JSON, {"error":"backend failed"});	
+	}	
+	
+	reply response;
+}
+
+
+@Description "Build the login page"
+function buildLoginPage(m) (message) throws exception {	
+	
+	// create the login page using callbackURL and state that comes in the message.
+	message loginPage = datamap ("loginPage.js", m);
+	
+	// set required headers
+	loginPage.setHeader(HTTP.Connection, "keep-alive");
+	loginPage.setHeader(HTTP.Content_Encoding, "gzip");
+	loginPage.setHeader(HTTP.Content_Type, "text/html");
+	loginPage.setHeader(HTTP.Content_Length, message.getContentLength());
+
+	loginPage.setHeader(HTTP.StatusCode, 200);		
+	return loginPage;		 
+}
+
+
+
+
