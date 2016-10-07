@@ -1,0 +1,48 @@
+package org.wso2.travelocity
+
+@Description "Redirect the user to the authenticationEndpoint"
+function buildAuthenticationRequest(m, authep, callbackURL) (message) throws exception {
+	log("Building authentication request.");
+
+	string state = m.getProperty("sessionID");
+	if (state == null || state == "") {
+		throw exception("No sessionID found in request");
+	}
+
+	message newReq = new message();
+	message.setPayload(Type.TEXT, "");
+	
+	// set required headers
+	newReq.setHeader(HTTP.Connection, "keep-alive");
+	newReq.setHeader(HTTP.Content_Encoding, "gzip");
+	newReq.setHeader(HTTP.Content_Type, "text/html");
+	newReq.setHeader(HTTP.Content_Length, message.getContentLength());
+
+	// set 302 for the browser redirect
+	newReq.setHeader(HTTP.StatusCode, 302);	
+	
+	string authEndpointURL = getAuthenticationEndpointURL (authep, state, callbackURL);
+	newReq.setHeader(HTTP.Location, authEndpointURL)
+
+	return newReq;		 
+}
+
+@Description "Util subroutine to build authentication endpointURL"
+function getAuthenticationEndpointURL (authEp, state, callbackURL) (string) throws exception{
+	string url = getURL(authEp);	
+
+	// This could be done by a Util function provided by NEL to build a URL based on params
+	if (url == null || url == "" ) {
+		throw exception("Empty URL");
+	}
+
+	if (state != null && state != "") {
+		url = url + "?state=" + state;	
+	}
+
+	if (callbackURL != null && callbackURL != "") {
+		url = url + "&callbackurl=" + URLEncode(getURL(callbackURL), "UTF-8");
+	}
+
+	return url;
+}
