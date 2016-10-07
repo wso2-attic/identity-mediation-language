@@ -19,7 +19,6 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.wso2.identity.bus.framework.AuthenticationContext;
 import org.wso2.identity.bus.framework.AuthenticationContextImpl;
-import org.wso2.identity.bus.framework.Greeter;
 
 /**
  * This is a sample bundle activator class.
@@ -27,7 +26,6 @@ import org.wso2.identity.bus.framework.Greeter;
  * @since 1.0.0-SNAPSHOT
  */
 public class Activator implements BundleActivator {
-    private Greeter greeter;
 
     /**
      * This is called when the bundle is started.
@@ -46,6 +44,5 @@ public class Activator implements BundleActivator {
      * @throws Exception Could be thrown while bundle stopping
      */
     public void stop(BundleContext bundleContext) throws Exception {
-        greeter.bye();
     }
 }

@@ -16,6 +16,9 @@
 
 package org.wso2.identity.bus.framework;
 
+/**
+ * Context to maintain the state in an authentication flow.
+ */
 public interface AuthenticationContext {
 
 

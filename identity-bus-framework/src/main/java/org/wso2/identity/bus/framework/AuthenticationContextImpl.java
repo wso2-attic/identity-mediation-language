@@ -20,9 +20,12 @@ package org.wso2.identity.bus.framework;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * AuthenticationContext Implementation to hold context information.
+ */
 public class AuthenticationContextImpl implements AuthenticationContext {
 
-    static Map<String, Object> authenticationContext = new HashMap<String, Object>();
+    private static Map<String, Object> authenticationContext = new HashMap<String, Object>();
 
     @Override
     public void addToContext(String key, Object value) {
