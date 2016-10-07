@@ -1,15 +1,15 @@
 @Path ("/travelocity")
-@Source (protocol="http", host="localhost", port="8290")
+@Source (protocol="http", host="localhost", port=8290)
 package org.wso2.travelocity;
 
 @POST
 @Path ("/saml")
 resource saml (message m) {
 	// send the recieved message to SAMLRequestProcessor, message decoded and sessionID added to context here
-	SAMLRequestProcessor(m);
+	m = SAMLRequestProcessor.mediator(m, "");
 
 	// build Authentication request to be send to the authenticationEndpoint
-	AuthenticationRequestBuilder(m, "authep=http://localhost:8290/authenticate/,callbackURL=http://localhost:8290/travelocity/localauth")
+	m = AuthenticationRequestBuilder.mediator(m, "authep=http://localhost:8290/authenticate/,callbackURL=http://localhost:8290/travelocity/localauth");
 
 }
 
@@ -19,9 +19,9 @@ resource localauth (message m) {
 	// This is mediator chain
 
 	// process localauth response	
-	AuthenticationResponseProcessor(m, "isSubject=true,subjectClaim=username,isAttribute=true")
+	m = AuthenticationResponseProcessor.mediator(m, "isSubject=true,subjectClaim=username,isAttribute=true");
 	
 	// build SAML response	
-	SAMLResponseBuilder(m)
+	m = SAMLResponseBuilder.mediator(m, "");
 
 } 
