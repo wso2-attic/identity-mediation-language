@@ -58,7 +58,7 @@ The following scenarios are demonstrated by the samples,
 #### Sample 1 : SAML Single Sign On with authentication with Local IDP.
 
 How to Setup this sample?
-* Copy `integration-flows/v2.0/authenticationEndpoint-v2.xyz` and `integration-flows/v2.0/localauth-v2.xyz` into `<iserver_home>/deployment/integration-flows/`
+* Copy `authenticationEndpoint-v2.xyz` and `localauth-v2.xyz` into `<iserver_home>/deployment/integration-flows/`
 * Go to http://localhost:8080/travelocity.com/index.jsp
 * Use SAML SSO login with `POST binding` option.  
 
