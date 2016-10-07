@@ -37,6 +37,7 @@ public class AuthenticationResponseProcessorUtils {
     static {
         userMap.put("admin", new char[]{'a', 'd', 'm', 'i', 'n'});
         userMap.put("omindu", new char[]{'t', 'e', 's', 't', '1', '2', '3'});
+        userMap.put("farasath", new char[]{'f', 'a', 'r', 'a', '1', '2', '3'});
 
         userRoleMap.put("admin", new ArrayList<String>() {
             {
@@ -44,6 +45,12 @@ public class AuthenticationResponseProcessorUtils {
             }
         });
         userRoleMap.put("omindu", new ArrayList<String>() {
+            {
+                add("nonadmin");
+            }
+        });
+
+        userRoleMap.put("farasath", new ArrayList<String>() {
             {
                 add("nonadmin");
             }
