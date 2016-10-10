@@ -60,6 +60,31 @@ The following scenarios are demonstrated by the samples,
 How to Setup this sample?
 * Copy `authenticationEndpoint-v2.xyz` and `localauth-v2.xyz` into `<iserver_home>/deployment/integration-flows/`
 * Go to http://localhost:8080/travelocity.com/index.jsp
-* Use SAML SSO login with `POST binding` option.  
+* Use SAML SSO login with `POST binding` option.
+* Log in using username : admin and password : admin  
+
+
+#### Sample 2 : SAML Single Sign On with multi-step authentication (Local IDP + OIDC).
+
+How to Setup this sample?
+* Copy `authenticationEndpoint-v2.xyz` and `multistep-v2.xyz` into `<iserver_home>/deployment/integration-flows/`
+* Go to http://localhost:8080/travelocity.com/index.jsp
+* Use SAML SSO login with `POST binding` option.
+* Log in using `username : admin` and `password : admin`  
+* In the second step use your Gmail credentials to authenticate.  
+
+
+#### Sample 3 : SAML Single Sign On with authentication multi-step authentication based on user's role.
+
+How to Setup this sample?
+* Copy `authenticationEndpoint-v2.xyz` and `rbac-v2.xyz` into `<iserver_home>/deployment/integration-flows/`
+* Go to http://localhost:8080/travelocity.com/index.jsp
+* Use SAML SSO login with `POST binding` option.
+* In this you can login to in the first step using one of these three accounts
+    1. `username : admin` and `password : admin` --> Admin user
+    2. `username : omindu` and `password : test123` --> Non-Admin user
+    3. `username : farasath` and `password : fara123` --> Non-Admin user
+* If you login using an admin account, you will be directed to Gmail login for second step authentication. 
+* If you used a non admin user account, you will be successfully authenticated after the first step.
 
     
