@@ -4,7 +4,7 @@
 
 1. Build carbon-gateway-framework - https://github.com/wso2/carbon-gateway-framework
 2. Build product-integration-server - https://github.com/wso2/product-integration-server
-3. Build the following packages and copy the jars to `<iserver_home>/osgi/dropins`
+3. Build the following packages under `identity-gateway-mediators` and copy the jars to `<iserver_home>/osgi/dropins`
   1. authentication-endpoint
   2. authentication-request-builder
   3. authentication-response-processor
@@ -13,6 +13,7 @@
   6. oidc-response-processor
   7. saml-request-processor
   8. saml-response-builder
+  
 4. Copy the dependencies from `dependencies` to `<iserver_home>/osgi/dropins/`
  
   ```
@@ -37,8 +38,9 @@
   wss4j_1.5.11.wso2v11.jar
   xercesImpl-2.8.1.wso2v2.jar
   ```
-5. Copy authentication-endpoint.iflow and one of the 3 integration flows to `<iserver_home>/deployment/integration-flows/`.
-6. Setup travelocity sample and set the IDP url to `http://localhost:8290/travelocity/saml`.
+
+5. Copy authentication-endpoint.iflow and one of the 3 integration flows from `integration-flows/v2.0` to `<iserver_home>/deployment/integration-flows/`.
+6. Refer `README.md` in `integration-flows/v2.0` for more details on setting up each sample(use-case) in detail.
 
 ## Usecases
 
