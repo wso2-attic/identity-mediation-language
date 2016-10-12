@@ -39,22 +39,22 @@
   xercesImpl-2.8.1.wso2v2.jar
   ```
 
-5. Copy authentication-endpoint.iflow and one of the 3 integration flows from `integration-flows/v2.0` to `<iserver_home>/deployment/integration-flows/`.
-6. Refer `README.md` in `integration-flows/v2.0` for more details on setting up each sample(use-case) in detail.
+5. Copy authentication-endpoint.iflow and one of the 3 integration flows from `integration-flows/iml-flows/v2.0` to `<iserver_home>/deployment/integration-flows/`.
+6. Refer `README.md` in `integration-flows/iml-flows/2.0` for more details on setting up each sample(use-case) in detail.
 
 ## Usecases
 
 ### Usecase 1 - Local Authenticator
 
-![Image of Usecase 1](https://github.com/omindu/iml-poc/blob/master/integration-flows/local.png)
+![Image of Usecase 1](https://github.com/wso2-incubator/identity-mediation-language/blob/master/integration-flows/local.png)
 
 ### Usecase 2 - Multi-Step Authentication
 
-![Image of Usecase 1](https://github.com/omindu/iml-poc/blob/master/integration-flows/multi-step.png)
+![Image of Usecase 2](https://github.com/wso2-incubator/identity-mediation-language/blob/master/integration-flows/multi-step.png)
 
 ### Usecase 3 - Multi-Step with Role Based Step Control
 
-![Image of Usecase 1](https://github.com/omindu/iml-poc/blob/master/integration-flows/RBAC.png)
+![Image of Usecase 3](https://github.com/wso2-incubator/identity-mediation-language/blob/master/integration-flows/RBAC.png)
 
 
 
