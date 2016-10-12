@@ -1,0 +1,52 @@
+@startuml
+participant user_agent
+participant service_provider
+participant "http_inbound:\n/travelocity" as http_inbound_travelocity
+participant "sequence:\n/travelocity/saml " as sequence_1
+participant "sequence:\n/travelocity/localAuth  " as sequence_2
+participant "sequence:\n/travelocity/oidc " as sequence_3
+participant "authentication \nendpoint" as auth_endpoint
+participant oidc_fidp
+
+
+
+
+user_agent -> service_provider : Access resource
+service_provider -> user_agent : [302] Redirects to bus\nwith SAML login request
+user_agent -> sequence_1 : Follows redirect with SAML login request
+hnote over sequence_1 : SAML request processor
+hnote over sequence_1 : Authentication request\nbuilder
+
+sequence_1 -> user_agent : [302] Redirects to authentication endpoint
+user_agent -> auth_endpoint : Follows redirect
+auth_endpoint <--> user_agent : User authentication
+auth_endpoint -> user_agent : [302] Authentication response
+user_agent -> sequence_2 : [302] Redirects to /travelocity/localAuth \nwith authentication response
+hnote over sequence_2 : Authentication response\nprocessor
+
+alt condition(role, "non-admin")
+hnote over sequence_2 : SAML response builder
+sequence_2 -> user_agent : [200] SAML response in HTML from
+user_agent -> service_provider : POST SAML response
+service_provider -> user_agent : Supply resource
+
+else redirect to federated IDP for OIDC login
+hnote over sequence_2 : OIDC request builder
+sequence_2 -> user_agent : [302]Redirects to IDP
+end
+
+
+user_agent -> oidc_fidp : Follows redirect: GET /authorize [Implicit]
+
+oidc_fidp <--> user_agent : User authentication
+oidc_fidp -> user_agent : [302]Redirects to /travelocity with ID token
+user_agent -> sequence_3 : Follows redirect with ID token
+hnote over sequence_3 : OIDC response processor
+hnote over sequence_3 : SAML response builder
+
+sequence_3 -> user_agent : [200]SAML response in HTML from
+user_agent -> service_provider : POST SAML response
+service_provider -> user_agent : Supply resource
+
+@enduml
+
