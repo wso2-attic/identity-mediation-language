@@ -154,7 +154,7 @@ public class SAMLRequestProcessor extends AbstractMediator {
      */
     @Override
     public void setParameters(ParameterHolder parameterHolder) {
-        logMessage = parameterHolder.getParameter("parameters").getValue();
+        // Get parameters sent as key=value from here.
     }
 
 
