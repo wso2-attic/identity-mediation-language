@@ -25,11 +25,9 @@ import org.wso2.carbon.gateway.core.flow.AbstractMediator;
 import org.wso2.carbon.gateway.mediators.authentication.response.processor.util.AuthenticationResponseProcessorUtils;
 import org.wso2.carbon.messaging.CarbonCallback;
 import org.wso2.carbon.messaging.CarbonMessage;
-import org.wso2.carbon.messaging.Constants;
 import org.wso2.carbon.messaging.DefaultCarbonMessage;
 import org.wso2.identity.bus.framework.AuthenticationContext;
 
-import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
@@ -38,8 +36,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
+
+import static org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_LENGTH;
+import static org.wso2.carbon.gateway.core.Constants.MESSAGE_KEY;
+import static org.wso2.carbon.gateway.core.Constants.RETURN_VALUE;
 
 
 /**
@@ -55,6 +56,7 @@ public class AuthenticationResponseProcessor extends AbstractMediator {
     private Map<String, String> parameters = new HashMap<>();
 
     private static final Charset UTF_8 = StandardCharsets.UTF_8;
+    private String messageRef;
 
     @Override
     public String getName() {
@@ -74,7 +76,12 @@ public class AuthenticationResponseProcessor extends AbstractMediator {
     public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) throws Exception {
         log.info("Invoking AuthenticationResponseProcessor Mediator");
 
-        String contentLength = carbonMessage.getHeader(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_LENGTH);
+        CarbonMessage inputCarbonMessage = (CarbonMessage) getObjectFromContext(carbonMessage, messageRef);
+        if (inputCarbonMessage == null) {
+            inputCarbonMessage = carbonMessage;
+        }
+
+        String contentLength = inputCarbonMessage.getHeader(HTTP_CONTENT_LENGTH);
         byte[] bytes = new byte[Integer.parseInt(contentLength)];
 
         List<ByteBuffer> fullMessageBody = carbonMessage.getFullMessageBody();
@@ -87,8 +94,8 @@ public class AuthenticationResponseProcessor extends AbstractMediator {
             offset = offset + duplicate.capacity();
         }
 
-        DefaultCarbonMessage message = new DefaultCarbonMessage();
-        message.setStringMessageBody("");
+        DefaultCarbonMessage authenticationResponseMessage = new DefaultCarbonMessage();
+        authenticationResponseMessage.setStringMessageBody("");
 
         String encodedParams = new String(bytes, UTF_8);
         String params = URLDecoder.decode(encodedParams, UTF_8.name());
@@ -101,7 +108,7 @@ public class AuthenticationResponseProcessor extends AbstractMediator {
         }
 
         String state = paramsMap.get("state");
-        message.setProperty("sessionID", state);
+        authenticationResponseMessage.setProperty("sessionID", state);
 
         String username = paramsMap.get("username");
         char[] passsword = paramsMap.get("password").toCharArray();
@@ -110,8 +117,12 @@ public class AuthenticationResponseProcessor extends AbstractMediator {
 
             ArrayList<String> roles = AuthenticationResponseProcessorUtils.getUserRoleMap().get(username);
             String role = roles.get(0);
-            message.setHeader("role", role);
-            message.setHeader("isAuthenticated", "true");
+            authenticationResponseMessage.setHeader("role", role);
+            authenticationResponseMessage.setHeader("isAuthenticated", "true");
+
+            // TODO : remove this after filter mediator is corrected, as of now the filter mediator simply looks at the
+            // carbon message passed to receive method instead of the actual message passed as a variable to it.
+            carbonMessage.setHeader("isAuthenticated", "true");
 
             AuthenticationContext authenticationContext = AuthenticationResponseProcessorDataHolder.getInstance()
                     .getAuthenticationContext();
@@ -136,42 +147,48 @@ public class AuthenticationResponseProcessor extends AbstractMediator {
                 authenticationContext.addToContext(state, responseContext);
             }
 
+            // set result of mediation to context
 
-            return next(message, carbonCallback);
         } else {
+            // If authentication fails, redirect again to the login page.
             String response = "";
-            message.setStringMessageBody(response);
-            message.setHeader("isAuthenticated", "false");
+            authenticationResponseMessage.setStringMessageBody(response);
+            authenticationResponseMessage.setHeader("isAuthenticated", "false");
 
-            Map<String, String> transportHeaders = new HashMap<>();
-            transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONNECTION,
-                    org.wso2.carbon.gateway.core.Constants.KEEP_ALIVE);
-            transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_ENCODING,
-                    org.wso2.carbon.gateway.core.Constants.GZIP);
-            transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_TYPE,
-                    "text/html");
-            transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_LENGTH,
-                    (String.valueOf(response.getBytes(UTF_8).length)));
+            // TODO : remove this after filter mediator is corrected, as of now the filter mediator simply looks at the
+            // carbon message passed to receive method instead of the actual message passed as a variable to it.
+            carbonMessage.setHeader("isAuthenticated", "false");
 
-            message.setHeaders(transportHeaders);
-            message.setProperty(org.wso2.carbon.gateway.core.Constants.HTTP_STATUS_CODE, 302);
-
-            URI uri = new URI(carbonMessage.getProperty(Constants.PROTOCOL).toString().toLowerCase(Locale.getDefault()),
-                    null,
-                    carbonMessage.getProperty(Constants.HOST).toString(),
-                    Integer.parseInt(carbonMessage.getProperty(Constants.LISTENER_PORT).toString()),
-                    carbonMessage.getProperty(Constants.TO).toString(),
-                    null,
-                    null);
-
-            message.setHeader("Location", AuthenticationResponseProcessorUtils.
-                    getAuthenticationEndpointURL(state, uri.toASCIIString()));
-            message.setProperty(Constants.DIRECTION, Constants.DIRECTION_RESPONSE);
-            message.setProperty(Constants.CALL_BACK, carbonCallback);
-            carbonCallback.done(message);
-
-            return true;
+            // TODO : set anything else that is useful for the authentication request builder other mediators.
+//            Map<String, String> transportHeaders = new HashMap<>();
+//            transportHeaders.put(HTTP_CONNECTION, KEEP_ALIVE);
+//            transportHeaders.put(HTTP_CONTENT_ENCODING, GZIP);
+//            transportHeaders.put(HTTP_CONTENT_TYPE, "text/html");
+//            transportHeaders.put(HTTP_CONTENT_LENGTH, (String.valueOf(response.getBytes(UTF_8).length)));
+//
+//            authenticationResponseMessage.setHeaders(transportHeaders);
+//            authenticationResponseMessage.setProperty(HTTP_STATUS_CODE, 302);
+//
+//            URI uri = new URI(carbonMessage.getProperty(Constants.PROTOCOL).toString().
+//                     toLowerCase(Locale.getDefault()),
+//                    null,
+//                    carbonMessage.getProperty(Constants.HOST).toString(),
+//                    Integer.parseInt(carbonMessage.getProperty(Constants.LISTENER_PORT).toString()),
+//                    carbonMessage.getProperty(Constants.TO).toString(),
+//                    null,
+//                    null);
+//
+//            authenticationResponseMessage.setHeader("Location", AuthenticationResponseProcessorUtils.
+//                    getAuthenticationEndpointURL(state, uri.toASCIIString()));
+//            authenticationResponseMessage.setProperty(Constants.DIRECTION, Constants.DIRECTION_RESPONSE);
+//            authenticationResponseMessage.setProperty(Constants.CALL_BACK, carbonCallback);
+//            carbonCallback.done(authenticationResponseMessage);
+            //return true;
         }
+
+        setObjectToContext(carbonMessage, getReturnedOutput(), authenticationResponseMessage);
+        return next(carbonMessage, carbonCallback);
+
     }
 
     /**
@@ -189,6 +206,11 @@ public class AuthenticationResponseProcessor extends AbstractMediator {
             if (params.length == 2) {
                 parameters.put(params[0].trim(), params[1].trim());
             }
+        }
+
+        messageRef = parameterHolder.getParameter(MESSAGE_KEY).getValue();
+        if (parameterHolder.getParameter(RETURN_VALUE) != null) {
+            returnedOutput = parameterHolder.getParameter(RETURN_VALUE).getValue();
         }
     }
 

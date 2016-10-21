@@ -33,6 +33,16 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.wso2.carbon.gateway.core.Constants.GZIP;
+import static org.wso2.carbon.gateway.core.Constants.HTTP_CONNECTION;
+import static org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_ENCODING;
+import static org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_LENGTH;
+import static org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_TYPE;
+import static org.wso2.carbon.gateway.core.Constants.HTTP_STATUS_CODE;
+import static org.wso2.carbon.gateway.core.Constants.KEEP_ALIVE;
+import static org.wso2.carbon.gateway.core.Constants.MESSAGE_KEY;
+import static org.wso2.carbon.gateway.core.Constants.RETURN_VALUE;
+
 
 /**
  * Mediator Implementation
@@ -46,6 +56,7 @@ public class AuthenticationRequestBuilder extends AbstractMediator {
     private Map<String, String> parameters = new HashMap<>();
 
     private static final Charset UTF_8 = StandardCharsets.UTF_8;
+    private String messageRef;
 
     @Override
     public String getName() {
@@ -65,38 +76,42 @@ public class AuthenticationRequestBuilder extends AbstractMediator {
     public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) throws Exception {
         log.info("Invoking AuthenticationRequestBuilder Mediator");
 
-        DefaultCarbonMessage message = new DefaultCarbonMessage();
-        String response = "";
-        message.setStringMessageBody(response);
+        // Retrieve the input message from the context.
+        CarbonMessage inputCarbonMessage = (CarbonMessage) getObjectFromContext(carbonMessage, messageRef);
+        if (inputCarbonMessage == null) {
+            inputCarbonMessage = carbonMessage;
+        }
 
-        String state = (String) carbonMessage.getProperty("sessionID");
+        String state = (String) inputCarbonMessage.getProperty("sessionID");
 
         if (state == null || state.isEmpty()) {
             log.error("No session details found.");
             return false;
         }
 
-        Map<String, String> transportHeaders = new HashMap<>();
-        transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONNECTION,
-                org.wso2.carbon.gateway.core.Constants.KEEP_ALIVE);
-        transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_ENCODING,
-                org.wso2.carbon.gateway.core.Constants.GZIP);
-        transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_TYPE, "text/html");
-        transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_LENGTH,
-                (String.valueOf(response.getBytes(UTF_8).length)));
+        DefaultCarbonMessage returnedMessage = new DefaultCarbonMessage();
+        String response = "";
+        returnedMessage.setStringMessageBody(response);
 
-        message.setHeaders(transportHeaders);
-        message.setProperty(org.wso2.carbon.gateway.core.Constants.HTTP_STATUS_CODE, 302);
+        Map<String, String> transportHeaders = new HashMap<>();
+        transportHeaders.put(HTTP_CONNECTION, KEEP_ALIVE);
+        transportHeaders.put(HTTP_CONTENT_ENCODING, GZIP);
+        transportHeaders.put(HTTP_CONTENT_TYPE, "text/html");
+        transportHeaders.put(HTTP_CONTENT_LENGTH, (String.valueOf(response.getBytes(UTF_8).length)));
+
+        returnedMessage.setHeaders(transportHeaders);
+        returnedMessage.setProperty(HTTP_STATUS_CODE, 302);
 
         String authenticationEndpoint = parameters.get(PROPERTY_AUTHENTICATION_ENDPOINT);
         String callbackURL = parameters.get(PROPERTY_CALLBACK_URL);
-        message.setHeader("Location", AuthenticationRequestBuilderUtils.buildAuthenticationEndpointURL
+        returnedMessage.setHeader("Location", AuthenticationRequestBuilderUtils.buildAuthenticationEndpointURL
                 (authenticationEndpoint, state, callbackURL));
-        message.setProperty(Constants.DIRECTION, Constants.DIRECTION_RESPONSE);
-        message.setProperty(Constants.CALL_BACK, carbonCallback);
-        carbonCallback.done(message);
+        returnedMessage.setProperty(Constants.DIRECTION, Constants.DIRECTION_RESPONSE);
+        returnedMessage.setProperty(Constants.CALL_BACK, carbonCallback);
 
-        return true;
+        // set the process message to the output variable via the context
+        setObjectToContext(carbonMessage, getReturnedOutput(), returnedMessage);
+        return next(carbonMessage, carbonCallback);
     }
 
     /**
@@ -106,6 +121,7 @@ public class AuthenticationRequestBuilder extends AbstractMediator {
      */
     @Override
     public void setParameters(ParameterHolder parameterHolder) {
+        // TODO remove this after gateway core supports returning params as objects not just the value as string.
         String paramString = parameterHolder.getParameter("parameters").getValue();
         String[] paramArray = paramString.split(",");
 
@@ -114,6 +130,11 @@ public class AuthenticationRequestBuilder extends AbstractMediator {
             if (params.length == 2) {
                 parameters.put(params[0].trim(), params[1].trim());
             }
+        }
+
+        messageRef = parameterHolder.getParameter(MESSAGE_KEY).getValue();
+        if (parameterHolder.getParameter(RETURN_VALUE) != null) {
+            returnedOutput = parameterHolder.getParameter(RETURN_VALUE).getValue();
         }
     }
 
