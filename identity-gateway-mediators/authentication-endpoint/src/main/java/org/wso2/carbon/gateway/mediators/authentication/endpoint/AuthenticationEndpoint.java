@@ -35,6 +35,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.wso2.carbon.gateway.core.Constants.GZIP;
+import static org.wso2.carbon.gateway.core.Constants.HTTP_CONNECTION;
+import static org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_ENCODING;
+import static org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_LENGTH;
+import static org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_TYPE;
+import static org.wso2.carbon.gateway.core.Constants.HTTP_STATUS_CODE;
+import static org.wso2.carbon.gateway.core.Constants.KEEP_ALIVE;
+import static org.wso2.carbon.gateway.core.Constants.MESSAGE_KEY;
+import static org.wso2.carbon.gateway.core.Constants.RETURN_VALUE;
+import static org.wso2.carbon.gateway.core.Constants.SERVICE_METHOD;
+
 
 /**
  * Mediator Implementation
@@ -47,6 +58,7 @@ public class AuthenticationEndpoint extends AbstractMediator {
     private Map<String, String> parameters = new HashMap<>();
 
     private static final Charset UTF_8 = StandardCharsets.UTF_8;
+    private String messageRef;
 
     @Override
     public String getName() {
@@ -67,13 +79,20 @@ public class AuthenticationEndpoint extends AbstractMediator {
         log.info("Invoking AuthenticationEndpoint Mediator");
         log.info(logMessage);
 
-        DefaultCarbonMessage message = new DefaultCarbonMessage();
-        String callbackURL = parameters.get(PROPERTY_CALLBAK_URL);
+        CarbonMessage inputCarbonMessage = (CarbonMessage) getObjectFromContext(carbonMessage, messageRef);
+        if (inputCarbonMessage == null) {
+            inputCarbonMessage = carbonMessage;
+        }
 
-        if (carbonMessage.getProperty(org.wso2.carbon.gateway.core.Constants.SERVICE_METHOD).equals("GET")) {
+        DefaultCarbonMessage authenticationResponseMessage;
+        String callbackURL = parameters.get(PROPERTY_CALLBAK_URL);
+        // state identifer
+        String sessionID = "";
+
+        if (inputCarbonMessage.getProperty(SERVICE_METHOD).equals("GET")) {
 
             Map<String, String> queryPairs = new HashMap<>();
-            URI uri = new URI((String) carbonMessage.getProperty(Constants.TO));
+            URI uri = new URI((String) inputCarbonMessage.getProperty(Constants.TO));
             String query = uri.getQuery();
             String[] pairs = query.split("&");
 
@@ -83,21 +102,19 @@ public class AuthenticationEndpoint extends AbstractMediator {
                         URLDecoder.decode(pair.substring(idx + 1), UTF_8.name()));
             }
 
-            String sessionID = queryPairs.get("state");
+            sessionID = queryPairs.get("state");
             String encodedCallbackURL = queryPairs.get("callbackURL");
 
             if (encodedCallbackURL != null) {
                 callbackURL = URLDecoder.decode(encodedCallbackURL, UTF_8.name());
             }
 
-            message = getCarbonMessageWithLoginPage(callbackURL, sessionID);
+        } else if (carbonMessage.getProperty(SERVICE_METHOD).equals("POST")) {
 
-        } else if (carbonMessage.getProperty(org.wso2.carbon.gateway.core.Constants.SERVICE_METHOD).equals("POST")) {
-
-            String contentLength = carbonMessage.getHeader(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_LENGTH);
+            String contentLength = inputCarbonMessage.getHeader(HTTP_CONTENT_LENGTH);
             byte[] bytes = new byte[Integer.parseInt(contentLength)];
 
-            List<ByteBuffer> fullMessageBody = carbonMessage.getFullMessageBody();
+            List<ByteBuffer> fullMessageBody = inputCarbonMessage.getFullMessageBody();
 
             int offset = 0;
 
@@ -117,36 +134,39 @@ public class AuthenticationEndpoint extends AbstractMediator {
                 paramsMap.put(aParamsArray.split("=")[0], aParamsArray.split("=")[1]);
             }
 
-            String state = paramsMap.get("state");
+            sessionID = paramsMap.get("state");
 
+            /*
+            // TODO: is this requestPath authentication?
             if ("admin".equals(paramsMap.get("username")) && "admin".equals(paramsMap.get("password"))) {
 
-                message = new DefaultCarbonMessage();
+                authenticationResponseMessage = new DefaultCarbonMessage();
                 String response = "";
-                message.setStringMessageBody(response);
+                authenticationResponseMessage.setStringMessageBody(response);
 
                 Map<String, String> transportHeaders = new HashMap<>();
-                transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONNECTION,
-                        org.wso2.carbon.gateway.core.Constants.KEEP_ALIVE);
-                transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_ENCODING,
-                        org.wso2.carbon.gateway.core.Constants.GZIP);
-                transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_TYPE, "text/html");
-                transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_LENGTH,
-                        (String.valueOf(response.getBytes(UTF_8).length)));
+                transportHeaders.put(HTTP_CONNECTION, KEEP_ALIVE);
+                transportHeaders.put(HTTP_CONTENT_ENCODING, GZIP);
+                transportHeaders.put(HTTP_CONTENT_TYPE, "text/html");
+                transportHeaders.put(HTTP_CONTENT_LENGTH, (String.valueOf(response.getBytes(UTF_8).length)));
 
-                message.setHeaders(transportHeaders);
-                message.setProperty(org.wso2.carbon.gateway.core.Constants.HTTP_STATUS_CODE, 302);
-                message.setHeader("Location", AuthenticationEndpointUtils.getACSURL(state));
+                authenticationResponseMessage.setHeaders(transportHeaders);
+                authenticationResponseMessage.setProperty(HTTP_STATUS_CODE, 302);
+                authenticationResponseMessage.setHeader("Location", AuthenticationEndpointUtils.getACSURL(state));
             } else {
-                message = getCarbonMessageWithLoginPage(callbackURL, state);
+                authenticationResponseMessage = getCarbonMessageWithLoginPage(callbackURL, state);
             }
-
+            */
+        } else {
+            // Unsupported Method : throw exception and catch using NEL try-catch mediator
         }
-        message.setProperty(Constants.DIRECTION, Constants.DIRECTION_RESPONSE);
-        message.setProperty(Constants.CALL_BACK, carbonCallback);
-        carbonCallback.done(message);
 
-        return true;
+        authenticationResponseMessage = getCarbonMessageWithLoginPage(callbackURL, sessionID);
+        authenticationResponseMessage.setProperty(Constants.DIRECTION, Constants.DIRECTION_RESPONSE);
+        authenticationResponseMessage.setProperty(Constants.CALL_BACK, carbonCallback);
+
+        setObjectToContext(carbonMessage, getReturnedOutput(), authenticationResponseMessage);
+        return next(carbonMessage, carbonCallback);
     }
 
     /**
@@ -164,6 +184,11 @@ public class AuthenticationEndpoint extends AbstractMediator {
             if (params.length == 2) {
                 parameters.put(params[0].trim(), params[1].trim());
             }
+        }
+
+        messageRef = parameterHolder.getParameter(MESSAGE_KEY).getValue();
+        if (parameterHolder.getParameter(RETURN_VALUE) != null) {
+            returnedOutput = parameterHolder.getParameter(RETURN_VALUE).getValue();
         }
     }
 
@@ -188,18 +213,13 @@ public class AuthenticationEndpoint extends AbstractMediator {
         int contentLength = response.getBytes(UTF_8).length;
 
         Map<String, String> transportHeaders = new HashMap<>();
-        transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONNECTION,
-                org.wso2.carbon.gateway.core.Constants.KEEP_ALIVE);
-        transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_ENCODING,
-                org.wso2.carbon.gateway.core.Constants.GZIP);
-        transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_TYPE, "text/html");
-        transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_LENGTH,
-                (String.valueOf(contentLength)));
+        transportHeaders.put(HTTP_CONNECTION, KEEP_ALIVE);
+        transportHeaders.put(HTTP_CONTENT_ENCODING, GZIP);
+        transportHeaders.put(HTTP_CONTENT_TYPE, "text/html");
+        transportHeaders.put(HTTP_CONTENT_LENGTH, (String.valueOf(contentLength)));
 
         message.setHeaders(transportHeaders);
-
-        message.setProperty(org.wso2.carbon.gateway.core.Constants.HTTP_STATUS_CODE, 200);
+        message.setProperty(HTTP_STATUS_CODE, 200);
         return message;
-
     }
 }

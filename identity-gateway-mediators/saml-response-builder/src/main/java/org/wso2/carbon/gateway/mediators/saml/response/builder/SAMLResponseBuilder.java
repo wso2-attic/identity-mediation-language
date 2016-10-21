@@ -88,6 +88,16 @@ import java.util.Map;
 import java.util.UUID;
 import javax.naming.ConfigurationException;
 
+import static org.wso2.carbon.gateway.core.Constants.GZIP;
+import static org.wso2.carbon.gateway.core.Constants.HTTP_CONNECTION;
+import static org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_ENCODING;
+import static org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_LENGTH;
+import static org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_TYPE;
+import static org.wso2.carbon.gateway.core.Constants.HTTP_STATUS_CODE;
+import static org.wso2.carbon.gateway.core.Constants.KEEP_ALIVE;
+import static org.wso2.carbon.gateway.core.Constants.MESSAGE_KEY;
+import static org.wso2.carbon.gateway.core.Constants.RETURN_VALUE;
+
 
 /**
  * Mediator Implementation
@@ -98,6 +108,7 @@ public class SAMLResponseBuilder extends AbstractMediator {
     private String logMessage = "Message received at Sample Mediator";   // Sample Mediator specific variable
 
     private static final Charset UTF_8 = StandardCharsets.UTF_8;
+    private String messageRef;
 
 
     @Override
@@ -120,7 +131,12 @@ public class SAMLResponseBuilder extends AbstractMediator {
             log.info("Message received at " + getName());
         }
 
-        String sessionID = (String) carbonMessage.getProperty("sessionID");
+        CarbonMessage inputCarbonMessage = (CarbonMessage) getObjectFromContext(carbonMessage, messageRef);
+        if (inputCarbonMessage == null) {
+            inputCarbonMessage = carbonMessage;
+        }
+
+        String sessionID = (String) inputCarbonMessage.getProperty("sessionID");
 
         AuthenticationContext authenticationContextMap = SAMLResponseBuilderDataHolder.getInstance()
                 .getAuthenticationContext();
@@ -128,31 +144,29 @@ public class SAMLResponseBuilder extends AbstractMediator {
                 authenticationContextMap.getFromContext(sessionID);
 
         AuthnRequest authnRequest = (AuthnRequest) authenticationContext.get("samlRequest");
+        String samlResponse = buildSAMLResponse(authnRequest, authenticationContext, inputCarbonMessage);
 
-        String samlResponse = buildSAMLResponse(authnRequest, authenticationContext, carbonMessage);
-        DefaultCarbonMessage message = new DefaultCarbonMessage();
+        // create the SAML response carbon message
+        DefaultCarbonMessage samlResponseMessage = new DefaultCarbonMessage();
         String response = SAMLResponseBuilderUtils.getHTMLResponseBody(samlResponse);
-        message.setStringMessageBody(response);
+        samlResponseMessage.setStringMessageBody(response);
 
         int contentLength = response.getBytes(UTF_8).length;
 
         Map<String, String> transportHeaders = new HashMap<>();
-        transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONNECTION,
-                org.wso2.carbon.gateway.core.Constants.KEEP_ALIVE);
-        transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_ENCODING,
-                org.wso2.carbon.gateway.core.Constants.GZIP);
-        transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_TYPE, "text/html");
-        transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_LENGTH,
-                (String.valueOf(contentLength)));
+        transportHeaders.put(HTTP_CONNECTION, KEEP_ALIVE);
+        transportHeaders.put(HTTP_CONTENT_ENCODING, GZIP);
+        transportHeaders.put(HTTP_CONTENT_TYPE, "text/html");
+        transportHeaders.put(HTTP_CONTENT_LENGTH, (String.valueOf(contentLength)));
 
-        message.setHeaders(transportHeaders);
+        samlResponseMessage.setHeaders(transportHeaders);
 
-        message.setProperty(org.wso2.carbon.gateway.core.Constants.HTTP_STATUS_CODE, 200);
-        message.setProperty(Constants.DIRECTION, Constants.DIRECTION_RESPONSE);
-        message.setProperty(Constants.CALL_BACK, carbonCallback);
+        samlResponseMessage.setProperty(HTTP_STATUS_CODE, 200);
+        samlResponseMessage.setProperty(Constants.DIRECTION, Constants.DIRECTION_RESPONSE);
+        samlResponseMessage.setProperty(Constants.CALL_BACK, carbonCallback);
 
-        carbonCallback.done(message);
-        return true;
+        setObjectToContext(carbonMessage, getReturnedOutput(), samlResponseMessage);
+        return next(carbonMessage, carbonCallback);
     }
 
     /**
@@ -162,7 +176,11 @@ public class SAMLResponseBuilder extends AbstractMediator {
      */
     @Override
     public void setParameters(ParameterHolder parameterHolder) {
-        logMessage = parameterHolder.getParameter("parameters").getValue();
+        // Get parameters sent as key=value from here.
+        messageRef = parameterHolder.getParameter(MESSAGE_KEY).getValue();
+        if (parameterHolder.getParameter(RETURN_VALUE) != null) {
+            returnedOutput = parameterHolder.getParameter(RETURN_VALUE).getValue();
+        }
     }
 
 
@@ -174,10 +192,9 @@ public class SAMLResponseBuilder extends AbstractMediator {
     }
 
 
-    private String buildSAMLResponse(AuthnRequest authnRequest, Map<String, Object> authenticationContext,
-                                     CarbonMessage carbonMessage) throws
-            ConfigurationException,
-            ParseException {
+    private String buildSAMLResponse(AuthnRequest authnRequest,
+                                     Map<String, Object> authenticationContext,
+                                     CarbonMessage carbonMessage) throws ConfigurationException, ParseException {
 
         String destination = "http://localhost:8080/travelocity.com/home.jsp";
 
