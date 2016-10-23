@@ -39,8 +39,12 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
+
+import static org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_LENGTH;
+import static org.wso2.carbon.gateway.core.Constants.MESSAGE_KEY;
+import static org.wso2.carbon.gateway.core.Constants.RETURN_VALUE;
+import static org.wso2.carbon.gateway.core.Constants.SERVICE_METHOD;
 
 
 /**
@@ -56,6 +60,7 @@ public class OIDCResponseProcessor extends AbstractMediator {
     private Map<String, String> parameters = new HashMap<>();
 
     private static final Charset UTF_8 = StandardCharsets.UTF_8;
+    private String messageRef;
 
 
     @Override
@@ -79,18 +84,21 @@ public class OIDCResponseProcessor extends AbstractMediator {
             log.debug("Message received at " + getName());
         }
 
+        CarbonMessage inputCarbonMessage = (CarbonMessage) getObjectFromContext(carbonMessage, messageRef);
+        if (inputCarbonMessage == null) {
+            inputCarbonMessage = carbonMessage;
+        }
+
         AuthenticationSuccessResponse successResponse;
-        DefaultCarbonMessage message = new DefaultCarbonMessage();
+        DefaultCarbonMessage oidcResponseMessage = new DefaultCarbonMessage();
         String state;
 
-        if (carbonMessage.getProperty(org.wso2.carbon.gateway.core.Constants.SERVICE_METHOD).equals("GET")) {
+        if (inputCarbonMessage.getProperty(SERVICE_METHOD).equals("GET")) {
             try {
-                // NOTE: This approach is used to overcome the issue of, IS 5.1.0 sending the id_token as a query
-                // param instead of a URL fragment. Ideally we will not be needing the logic inside the 'try' block.
-                successResponse = AuthenticationSuccessResponse.parse(new URI((String) carbonMessage.getProperty
+                successResponse = AuthenticationSuccessResponse.parse(new URI((String) inputCarbonMessage.getProperty
                         (Constants.TO)));
                 Map<String, String> queryPairMap = new HashMap<>();
-                URI uri = new URI((String) carbonMessage.getProperty(Constants.TO));
+                URI uri = new URI((String) inputCarbonMessage.getProperty(Constants.TO));
                 String query = uri.getQuery();
                 String[] pairs = query.split("&");
 
@@ -103,63 +111,35 @@ public class OIDCResponseProcessor extends AbstractMediator {
                 state = queryPairMap.get("state");
 
             } catch (ParseException e) {
-
-                URI uri = new URI(
-                        carbonMessage.getProperty(Constants.PROTOCOL).toString().toLowerCase(Locale.getDefault()),
-                        null,
-                        carbonMessage.getProperty(Constants.HOST).toString(),
-                        Integer.parseInt(carbonMessage.getProperty(Constants.LISTENER_PORT).toString()),
-                        carbonMessage.getProperty(Constants.TO).toString(),
-                        null,
-                        null);
-
-                String response = getJavascript(uri.toASCIIString());
-                message.setStringMessageBody(response);
-
-                int contentLength = response.getBytes(UTF_8).length;
-
-                Map<String, String> transportHeaders = new HashMap<>();
-                transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONNECTION,
-                        org.wso2.carbon.gateway.core.Constants.KEEP_ALIVE);
-                transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_ENCODING,
-                        org.wso2.carbon.gateway.core.Constants.GZIP);
-                transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_TYPE, "text/html");
-                transportHeaders.put(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_LENGTH,
-                        (String.valueOf(contentLength)));
-
-                message.setHeaders(transportHeaders);
-
-                message.setProperty(org.wso2.carbon.gateway.core.Constants.HTTP_STATUS_CODE, 200);
-                message.setProperty(Constants.DIRECTION, Constants.DIRECTION_RESPONSE);
-                message.setProperty(Constants.CALL_BACK, carbonCallback);
-
-                carbonCallback.done(message);
-                return true;
+                // log error and throw to NEL.
+                log.error("Error parsing the OIDC response recieved to " + getName());
+                return false;
             }
-        } else if (carbonMessage.getProperty(org.wso2.carbon.gateway.core.Constants.SERVICE_METHOD).equals("POST")) {
+        } else if (inputCarbonMessage.getProperty(SERVICE_METHOD).equals("POST")) {
 
-            String contentLength = carbonMessage.getHeader(org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_LENGTH);
+            String contentLength = inputCarbonMessage.getHeader(HTTP_CONTENT_LENGTH);
             byte[] bytes = new byte[Integer.parseInt(contentLength)];
 
-            List<ByteBuffer> fullMessageBody = carbonMessage.getFullMessageBody();
+            List<ByteBuffer> fullMessageBody = inputCarbonMessage.getFullMessageBody();
 
             int offset = 0;
-
             for (ByteBuffer byteBuffer : fullMessageBody) {
                 ByteBuffer duplicate = byteBuffer.duplicate();
                 duplicate.get(bytes, offset, byteBuffer.capacity());
                 offset = offset + duplicate.capacity();
             }
 
-            message.setStringMessageBody("");
+            oidcResponseMessage.setStringMessageBody("");
 
             String encodedParams = new String(bytes, UTF_8);
             String fragment = URLDecoder.decode(encodedParams, UTF_8.name()).split("=", 2)[1];
-            successResponse = AuthenticationSuccessResponse.parse(new URI(carbonMessage.getProperty
+            successResponse = AuthenticationSuccessResponse.parse(new URI(inputCarbonMessage.getProperty
                     (Constants.TO) + "#" + fragment));
             state = successResponse.getState().getValue();
         } else {
-
+            // unsupported method.
+            String serviceMethod = (String) inputCarbonMessage.getProperty(SERVICE_METHOD);
+            log.error(serviceMethod + " not supported by the receive method of " + getName());
             return false;
         }
 
@@ -208,10 +188,11 @@ public class OIDCResponseProcessor extends AbstractMediator {
             authenticationContext.addToContext(state, responseContext);
         }
 
-        message.setProperty("signedJWT", signedJWT);
-        message.setProperty("sessionID", state);
+        oidcResponseMessage.setProperty("signedJWT", signedJWT);
+        oidcResponseMessage.setProperty("sessionID", state);
 
-        return next(message, carbonCallback);
+        setObjectToContext(carbonMessage, getReturnedOutput(), oidcResponseMessage);
+        return next(carbonMessage, carbonCallback);
     }
 
     /**
@@ -230,6 +211,12 @@ public class OIDCResponseProcessor extends AbstractMediator {
                 parameters.put(params[0].trim(), params[1].trim());
             }
         }
+
+        // Get parameters sent as key=value from here.
+        messageRef = parameterHolder.getParameter(MESSAGE_KEY).getValue();
+        if (parameterHolder.getParameter(RETURN_VALUE) != null) {
+            returnedOutput = parameterHolder.getParameter(RETURN_VALUE).getValue();
+        }
     }
 
 
@@ -238,33 +225,6 @@ public class OIDCResponseProcessor extends AbstractMediator {
      */
     public void setLogMessage(String logMessage) {
         this.logMessage = logMessage;
-    }
-
-
-    private static String getJavascript(String callbackURL) {
-        String responseBody = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3" +
-                ".org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n" +
-                "\n" +
-                "<html>\n" +
-                "    <head>\n" +
-                "        <title></title>\n" +
-                "    </head>\n" +
-                "    <body>\n" +
-                "        <p>You are now redirected to $url If the redirection fails, please click the " +
-                "post button.</p>\n" +
-                "        <form action='" + callbackURL + "' method='post'>\n" +
-                "            <p><input name='fragment' id='id_token' type='hidden' value=''> <button " +
-                "type='submit'>POST</button></p>\n" +
-                "        </form>\n" +
-                "        <script type='text/javascript'>\n" +
-                "            document.getElementById('id_token').value = window.location.hash.substring" +
-                "(1);\n" +
-                "            document.forms[0].submit();\n" +
-                "        </script>\n" +
-                "    </body>\n" +
-                "</html>";
-
-        return responseBody;
     }
 
 }

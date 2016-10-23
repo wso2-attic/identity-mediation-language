@@ -122,6 +122,7 @@ public class AuthenticationResponseProcessor extends AbstractMediator {
 
             // TODO : remove this after filter mediator is corrected, as of now the filter mediator simply looks at the
             // carbon message passed to receive method instead of the actual message passed as a variable to it.
+            carbonMessage.setHeader("role", role);
             carbonMessage.setHeader("isAuthenticated", "true");
 
             AuthenticationContext authenticationContext = AuthenticationResponseProcessorDataHolder.getInstance()
