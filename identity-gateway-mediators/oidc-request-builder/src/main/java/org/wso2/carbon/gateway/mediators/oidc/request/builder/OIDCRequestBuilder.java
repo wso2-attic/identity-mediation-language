@@ -39,6 +39,10 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.wso2.carbon.gateway.core.Constants.HTTP_STATUS_CODE;
+import static org.wso2.carbon.gateway.core.Constants.MESSAGE_KEY;
+import static org.wso2.carbon.gateway.core.Constants.RETURN_VALUE;
+
 /**
  * Mediator Implementation
  */
@@ -52,6 +56,7 @@ public class OIDCRequestBuilder extends AbstractMediator {
 
     private String logMessage = "Message received at Sample Mediator";
     private Map<String, String> parameters = new HashMap<>();
+    private String messageRef;
 
     private static final Charset UTF_8 = StandardCharsets.UTF_8;
 
@@ -76,6 +81,11 @@ public class OIDCRequestBuilder extends AbstractMediator {
             log.info("Message received at " + getName());
         }
 
+        CarbonMessage inputCarbonMessage = (CarbonMessage) getObjectFromContext(carbonMessage, messageRef);
+        if (inputCarbonMessage == null) {
+            inputCarbonMessage = carbonMessage;
+        }
+
         ResponseType responseType = new ResponseType();
         responseType.add(OIDCResponseTypeValue.ID_TOKEN);
         //responseType.add(ResponseType.Value.TOKEN);
@@ -86,7 +96,7 @@ public class OIDCRequestBuilder extends AbstractMediator {
         String decodedClientID = new String(Base64.getDecoder().decode(encodedClientID.getBytes(UTF_8)), UTF_8);
 
         ClientID clientID = new ClientID(decodedClientID);
-        String sessionID = (String) carbonMessage.getProperty("sessionID");
+        String sessionID = (String) inputCarbonMessage.getProperty("sessionID");
 
         if (sessionID == null || sessionID.isEmpty()) {
             log.error("No session details found.");
@@ -99,18 +109,17 @@ public class OIDCRequestBuilder extends AbstractMediator {
         URI tokenEP = new URI(parameters.get(PROPERTY_TOKEN_ENDPOINT));
         URI callback = new URI(parameters.get(PROPERTY_CALLBACK_URL));
 
-        AuthenticationRequest authenticationRequest = new AuthenticationRequest(tokenEP, responseType, scope,
-                clientID, callback, state,
-                nonce);
-        carbonMessage.setProperty(org.wso2.carbon.gateway.core.Constants.HTTP_STATUS_CODE, 302);
-        carbonMessage.setHeader("Location", authenticationRequest.toURI().toASCIIString());
+        AuthenticationRequest authenticationRequest = new AuthenticationRequest(tokenEP, responseType, scope, clientID,
+                callback, state, nonce);
+        inputCarbonMessage.setProperty(HTTP_STATUS_CODE, 302);
+        inputCarbonMessage.setHeader("Location", authenticationRequest.toURI().toASCIIString());
 
         //TODO: FIGURE THI OUT!!
 //      SAMLtoOIDCDSL.authenticationContextMap.put(sessionID, (AuthenticationContext) carbonMessage.
 //              getProperty("authenticationContext"));
 
-        carbonCallback.done(carbonMessage);
-        return true;
+        setObjectToContext(carbonMessage, getReturnedOutput(), inputCarbonMessage);
+        return next(carbonMessage, carbonCallback);
     }
 
     /**
@@ -129,6 +138,12 @@ public class OIDCRequestBuilder extends AbstractMediator {
             if (params.length == 2) {
                 parameters.put(params[0].trim(), params[1].trim());
             }
+        }
+
+        // Get parameters sent as key=value from here.
+        messageRef = parameterHolder.getParameter(MESSAGE_KEY).getValue();
+        if (parameterHolder.getParameter(RETURN_VALUE) != null) {
+            returnedOutput = parameterHolder.getParameter(RETURN_VALUE).getValue();
         }
     }
 
