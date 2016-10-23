@@ -1,0 +1,45 @@
+@Path ("/travelocity")
+@Source (interface="default")
+package org.wso2.travelocity;
+
+
+
+@POST
+@Path ("/saml")
+resource saml (message m) {
+	// Mediator/Handler chain
+	m = SAMLRequestProcessor(messageKey=m);
+	m = AuthenticationRequestBuilder(messageKey=m, parameters="authep=http://localhost:8290/authenticate/,callbackURL=http://localhost:8290/travelocity/localauth");
+	reply m;
+}
+
+@POST
+@Path ("/localauth")
+resource localauth (message m) {
+
+	// process localauth response
+	m = AuthenticationResponseProcessor(messageKey=m, parameters="isSubject=true,subjectClaim=username,isAttribute=true")	;
+
+	// check role of the authenicated user and enforce second factor if admin
+	if (eval("$header.role", m) == "admin") {
+		// send OIDC requst to federated IDP
+		m = OIDCRequestBuilder(messageKey=m, parameters="scope=openid email profile,tokenep=https://accounts.google.com/o/oauth2/v2/auth,callbackurl=http://ibus.wso2.com:8290/travelocity/oidc,clientid= MzAxMDY1MjUwMTM0LXRsdXE0cHBkYTEyNGxscHMyN3F1bTlsc203dXZqNG5wLmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29t");
+	} else {
+		m = SAMLResponseBuilder(messageKey=m);
+	}
+
+	reply m;	
+}
+
+@POST
+@GET
+@Path ("/oidc")
+resource oidc (message m) {
+	// process the OIDC response
+	m = OIDCResponseProcessor(messageKey=m, parameters="isSubject=true,subjectClaim=email,isAttribute=true");
+
+	// send the saml response
+	m = SAMLResponseBuilder(messageKey=m);
+
+	reply m;	
+} 

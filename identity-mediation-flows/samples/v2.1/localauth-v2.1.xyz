@@ -1,0 +1,35 @@
+@Path ("/travelocity")
+@Source (interface="default")
+package org.wso2.travelocity;
+
+@POST
+@Path ("/saml")
+resource saml (message m) {
+	// send the recieved message to SAMLRequestProcessor, message decoded and sessionID added to context here
+	m = SAMLRequestProcessor(messageKey=m);
+
+	// build Authentication request to be send to the authenticationEndpoint
+	m = AuthenticationRequestBuilder(messageKey=m, parameters="authep=http://localhost:8290/authenticate/,callbackURL=http://localhost:8290/travelocity/localauth");
+
+	reply m;
+
+}
+
+@POST
+@Path ("/localauth")
+resource localauth (message m) {
+	// This is mediator chain
+
+	// process localauth response	
+	m = AuthenticationResponseProcessor(messageKey=m, parameters="isSubject=true,subjectClaim=username,isAttribute=true");
+
+	if (eval("$header.isAuthenticated", m) == "true") {
+		// build SAML response for successfull authentication	
+		m = SAMLResponseBuilder(messageKey=m);
+	} else {
+		// send back to authenticate
+		m = AuthenticationRequestBuilder(messageKey=m, parameters="authep=http://localhost:8290/authenticate/,callbackURL=http://localhost:8290/travelocity/localauth");
+	}
+	
+	reply m;
+} 
