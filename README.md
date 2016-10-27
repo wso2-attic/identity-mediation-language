@@ -46,15 +46,15 @@
 
 ### Usecase 1 - Local Authenticator
 
-![Image of Usecase 1](https://github.com/wso2-incubator/identity-mediation-language/blob/master/integration-flows/local.png)
+![Image of Usecase 1](identity-mediation-flows/local.png)
 
 ### Usecase 2 - Multi-Step Authentication
 
-![Image of Usecase 2](https://github.com/wso2-incubator/identity-mediation-language/blob/master/integration-flows/multi-step.png)
+![Image of Usecase 2](identity-mediation-flows/multi-step.png)
 
 ### Usecase 3 - Multi-Step with Role Based Step Control
 
-![Image of Usecase 3](https://github.com/wso2-incubator/identity-mediation-language/blob/master/integration-flows/RBAC.png)
+![Image of Usecase 3](identity-mediation-flows/RBAC.png)
 
 
 
