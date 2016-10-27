@@ -55,6 +55,11 @@
                 <version>${equinox.osgi.services.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.wso2.carbon</groupId>
+                <artifactId>org.wso2.carbon.core</artifactId>
+                <version>${carbon.kernel.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.wso2.carbon.gateway</groupId>
                 <artifactId>org.wso2.carbon.gateway.core</artifactId>
                 <version>${carbon.gw.version}</version>
@@ -102,11 +107,9 @@
 
         <identity.bus.framework.version>1.0.0-SNAPSHOT</identity.bus.framework.version>
 
+        <carbon.kernel.version>5.1.0</carbon.kernel.version>
         <carbon.gw.version>1.0.0-SNAPSHOT</carbon.gw.version>
-        <carbon.messaging.version>1.0.8-SNAPSHOT</carbon.messaging.version>
-        <carbon.transport.version>2.1.4-SNAPSHOT</carbon.transport.version>
-
-        <carbon.transport.package.import.version.range>[2.0.0, 2.2.0)</carbon.transport.package.import.version.range>
+        <carbon.messaging.version>1.0.9</carbon.messaging.version>
 
         <osgi.api.version>6.0.0</osgi.api.version>
         <osgi.framework.import.version.range>[1.8.0, 2.0.0)</osgi.framework.import.version.range>

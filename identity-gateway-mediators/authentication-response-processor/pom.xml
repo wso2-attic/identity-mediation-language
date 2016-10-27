@@ -70,9 +70,8 @@
 
     <properties>
         <export.package>
-            org.wso2.carbon.gateway.mediators.authentication.response.processor,
-            org.wso2.carbon.gateway.mediators.authentication.response.processor.builder,
-            org.wso2.carbon.gateway.mediators.authentication.response.processor.util
+            org.wso2.carbon.identity.gateway.mediators.authentication.response.processor,
+            org.wso2.carbon.identity.gateway.mediators.authentication.response.processor.util
         </export.package>
         <import.package>
             org.osgi.framework.*;version="${osgi.framework.import.version.range}",
