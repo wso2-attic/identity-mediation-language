@@ -16,7 +16,7 @@
 * under the License.
 */
 
-package org.wso2.carbon.identity.gateway.inbound.dispatcher.mediators.saml.request.processor;
+package org.wso2.carbon.identity.gateway.mediators.saml.request.processor;
 
 import org.apache.xerces.util.SecurityManager;
 import org.opensaml.Configuration;
@@ -32,7 +32,7 @@ import org.w3c.dom.Element;
 import org.wso2.carbon.gateway.core.Constants;
 import org.wso2.carbon.gateway.core.config.ParameterHolder;
 import org.wso2.carbon.gateway.core.flow.AbstractMediator;
-import org.wso2.carbon.identity.gateway.inbound.dispatcher.mediators.saml.request.processor.util.SAMLRequestProcessorUtils;
+import org.wso2.carbon.identity.gateway.mediators.saml.request.processor.util.SAMLRequestProcessorUtils;
 import org.wso2.carbon.messaging.CarbonCallback;
 import org.wso2.carbon.messaging.CarbonMessage;
 import org.wso2.carbon.messaging.DefaultCarbonMessage;

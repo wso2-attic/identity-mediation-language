@@ -47,6 +47,10 @@
             <artifactId>org.eclipse.osgi.services</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.wso2.carbon</groupId>
+            <artifactId>org.wso2.carbon.core</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.wso2.carbon.gateway</groupId>
             <artifactId>org.wso2.carbon.gateway.core</artifactId>
         </dependency>
@@ -78,12 +82,12 @@
 
     <properties>
         <export.package>
-            org.wso2.carbon.gateway.mediators.saml.response.builder,
-            org.wso2.carbon.gateway.mediators.saml.response.builder.util,
-            org.wso2.carbon.gateway.mediators.saml.response.builder.builder
+            org.wso2.carbon.identity.gateway.mediators.saml.response.builder,
+            org.wso2.carbon.identity.gateway.mediators.saml.response.builder.util,
         </export.package>
         <import.package>
             org.osgi.framework.*;version="${osgi.framework.import.version.range}",
+            org.wso2.carbon.kernel.utils.*,
             org.wso2.carbon.gateway.core.*,
             org.wso2.carbon.messaging.*,
             org.slf4j.*;version="${slf4j.logging.package.import.version.range}",

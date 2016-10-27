@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.wso2.carbon.identity.gateway.inbound.dispatcher.mediators.saml.request.processor.util;
+package org.wso2.carbon.identity.gateway.mediators.saml.request.processor.util;
 
 import org.opensaml.DefaultBootstrap;
 import org.opensaml.xml.ConfigurationException;

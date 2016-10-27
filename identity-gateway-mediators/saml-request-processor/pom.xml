@@ -78,9 +78,8 @@
 
     <properties>
         <export.package>
-            org.wso2.carbon.gateway.mediators.saml.request.processor,
-            org.wso2.carbon.gateway.mediators.saml.request.processor.builder,
-            org.wso2.carbon.gateway.mediators.saml.request.processor.util,
+            org.wso2.carbon.identity.gateway.mediators.saml.request.processor,
+            org.wso2.carbon.identity.gateway.mediators.saml.request.processor.util,
         </export.package>
         <import.package>
             org.osgi.framework.*;version="${osgi.framework.import.version.range}",

@@ -16,7 +16,7 @@
 * under the License.
 */
 
-package org.wso2.carbon.identity.gateway.inbound.dispatcher.mediators.saml.request.processor;
+package org.wso2.carbon.identity.gateway.mediators.saml.request.processor;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;

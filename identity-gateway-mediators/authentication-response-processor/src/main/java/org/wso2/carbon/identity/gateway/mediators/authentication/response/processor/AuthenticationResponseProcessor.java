@@ -16,13 +16,13 @@
 * under the License.
 */
 
-package org.wso2.carbon.identity.gateway.meditors.common.callback.mediators.authentication.response.processor;
+package org.wso2.carbon.identity.gateway.mediators.authentication.response.processor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.carbon.gateway.core.config.ParameterHolder;
 import org.wso2.carbon.gateway.core.flow.AbstractMediator;
-import org.wso2.carbon.identity.gateway.meditors.common.callback.mediators.authentication.response.processor.util.AuthenticationResponseProcessorUtils;
+import org.wso2.carbon.identity.gateway.mediators.authentication.response.processor.util.AuthenticationResponseProcessorUtils;
 import org.wso2.carbon.messaging.CarbonCallback;
 import org.wso2.carbon.messaging.CarbonMessage;
 import org.wso2.carbon.messaging.DefaultCarbonMessage;
@@ -104,7 +104,10 @@ public class AuthenticationResponseProcessor extends AbstractMediator {
         Map<String, String> paramsMap = new HashMap<>();
 
         for (int i = 0; i < paramsArray.length; i++) {
-            paramsMap.put(paramsArray[i].split("=")[0], paramsArray[i].split("=")[1]);
+            String keyValue[] = paramsArray[i].split("=");
+            String key = keyValue[0];
+            String value = keyValue.length == 2 ? keyValue[1] : "";
+            paramsMap.put(key, value);
         }
 
         String state = paramsMap.get("state");

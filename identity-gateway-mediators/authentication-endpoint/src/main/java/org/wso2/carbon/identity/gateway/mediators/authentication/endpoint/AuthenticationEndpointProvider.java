@@ -16,7 +16,7 @@
 * under the License.
 */
 
-package org.wso2.carbon.identity.gateway.inbound.dispatcher.meditors.common.callback.mediators.authentication.endpoint;
+package org.wso2.carbon.identity.gateway.mediators.authentication.endpoint;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;

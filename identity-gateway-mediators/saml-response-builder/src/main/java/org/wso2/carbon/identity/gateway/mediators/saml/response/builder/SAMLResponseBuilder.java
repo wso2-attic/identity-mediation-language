@@ -16,7 +16,7 @@
 * under the License.
 */
 
-package org.wso2.carbon.identity.gateway.inbound.dispatcher.mediators.saml.response.builder;
+package org.wso2.carbon.identity.gateway.mediators.saml.response.builder;
 
 import org.joda.time.DateTime;
 import org.opensaml.Configuration;
@@ -70,7 +70,8 @@ import org.w3c.dom.ls.LSOutput;
 import org.w3c.dom.ls.LSSerializer;
 import org.wso2.carbon.gateway.core.config.ParameterHolder;
 import org.wso2.carbon.gateway.core.flow.AbstractMediator;
-import org.wso2.carbon.identity.gateway.inbound.dispatcher.mediators.saml.response.builder.util.SAMLResponseBuilderUtils;
+import org.wso2.carbon.identity.gateway.mediators.saml.response.builder.util.SAMLResponseBuilderUtils;
+import org.wso2.carbon.kernel.utils.StringUtils;
 import org.wso2.carbon.messaging.CarbonCallback;
 import org.wso2.carbon.messaging.CarbonMessage;
 import org.wso2.carbon.messaging.Constants;
@@ -107,9 +108,14 @@ public class SAMLResponseBuilder extends AbstractMediator {
     private static final Logger log = LoggerFactory.getLogger(SAMLResponseBuilder.class);
     private String logMessage = "Message received at Sample Mediator";   // Sample Mediator specific variable
 
-    private static final Charset UTF_8 = StandardCharsets.UTF_8;
     private String messageRef;
+    /*
+        Assertion consumer URL of the Service Provider. This is the URL to which we should POST the SAMLResponse.
+     */
+    private String assertionConsumerURL;
 
+    private static final Charset UTF_8 = StandardCharsets.UTF_8;
+    private static final String ACS_URL = "acsURL";
 
     @Override
     public String getName() {
@@ -144,7 +150,14 @@ public class SAMLResponseBuilder extends AbstractMediator {
                 authenticationContextMap.getFromContext(sessionID);
 
         AuthnRequest authnRequest = (AuthnRequest) authenticationContext.get("samlRequest");
-        String samlResponse = buildSAMLResponse(authnRequest, authenticationContext, inputCarbonMessage);
+
+        if (StringUtils.isNullOrEmptyAfterTrim(assertionConsumerURL)) {
+            log.error("Invalid assertion consumer URL provided : " + assertionConsumerURL);
+            return false;
+        }
+
+        String samlResponse = buildSAMLResponse(authnRequest, authenticationContext, assertionConsumerURL,
+                inputCarbonMessage);
 
         // create the SAML response carbon message
         DefaultCarbonMessage samlResponseMessage = new DefaultCarbonMessage();
@@ -181,6 +194,10 @@ public class SAMLResponseBuilder extends AbstractMediator {
         if (parameterHolder.getParameter(RETURN_VALUE) != null) {
             returnedOutput = parameterHolder.getParameter(RETURN_VALUE).getValue();
         }
+
+        if (parameterHolder.getParameter(ACS_URL) != null) {
+            assertionConsumerURL = parameterHolder.getParameter(ACS_URL).getValue();
+        }
     }
 
 
@@ -194,9 +211,8 @@ public class SAMLResponseBuilder extends AbstractMediator {
 
     private String buildSAMLResponse(AuthnRequest authnRequest,
                                      Map<String, Object> authenticationContext,
+                                     String assertionConsumerUrl,
                                      CarbonMessage carbonMessage) throws ConfigurationException, ParseException {
-
-        String destination = "http://localhost:8080/travelocity.com/home.jsp";
 
         Response response = new ResponseBuilder().buildObject();
 
@@ -245,7 +261,7 @@ public class SAMLResponseBuilder extends AbstractMediator {
         SubjectConfirmationData subjectConfirmationData = new SubjectConfirmationDataBuilder().buildObject();
         subjectConfirmationData.setInResponseTo(inResponseTo);
         subjectConfirmationData.setNotBefore(notOnOrAfter);
-        subjectConfirmationData.setRecipient(destination);
+        subjectConfirmationData.setRecipient(assertionConsumerUrl);
 
         subjectConfirmation.setSubjectConfirmationData(subjectConfirmationData);
 

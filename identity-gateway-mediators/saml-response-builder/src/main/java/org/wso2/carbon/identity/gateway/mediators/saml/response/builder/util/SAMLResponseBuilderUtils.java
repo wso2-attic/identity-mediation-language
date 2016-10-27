@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.wso2.carbon.identity.gateway.inbound.dispatcher.mediators.saml.response.builder.util;
+package org.wso2.carbon.identity.gateway.mediators.saml.response.builder.util;
 
 import org.opensaml.DefaultBootstrap;
 import org.opensaml.saml2.core.Issuer;

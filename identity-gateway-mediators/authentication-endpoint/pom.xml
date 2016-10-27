@@ -66,15 +66,13 @@
 
     <properties>
         <export.package>
-            org.wso2.carbon.gateway.mediators.authentication.endpoint,
-            org.wso2.carbon.gateway.mediators.authentication.endpoint.builder,
-            org.wso2.carbon.gateway.mediators.authentication.endpoint.util
+            org.wso2.carbon.identity.gateway.mediators.authentication.endpoint,
+            org.wso2.carbon.identity.gateway.mediators.authentication.endpoint.util
         </export.package>
         <import.package>
             org.osgi.framework.*;version="${osgi.framework.import.version.range}",
             org.wso2.carbon.gateway.core.*,
             org.wso2.carbon.messaging.*,
-            org.wso2.carbon.transport.http.netty.*; version="${carbon.transport.package.import.version.range}",
             org.slf4j.*;version="${slf4j.logging.package.import.version.range}",
         </import.package>
         <carbon.component>

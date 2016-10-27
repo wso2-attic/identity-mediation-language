@@ -74,8 +74,8 @@
 
     <properties>
         <export.package>
-            org.wso2.carbon.gateway.mediators.oidc.request.builder,
-            org.wso2.carbon.gateway.mediators.oidc.request.builder.builder
+            org.wso2.carbon.identity.gateway.mediators.oidc.request.builder,
+            org.wso2.carbon.identity.gateway.mediators.oidc.request.builder.builder
         </export.package>
         <import.package>
             org.osgi.framework.*;version="${osgi.framework.import.version.range}",

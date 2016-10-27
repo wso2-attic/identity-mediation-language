@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.wso2.carbon.identity.gateway.inbound.dispatcher.mediators.saml.response.builder;
+package org.wso2.carbon.identity.gateway.mediators.saml.response.builder;
 
 import org.wso2.identity.bus.framework.AuthenticationContext;
 

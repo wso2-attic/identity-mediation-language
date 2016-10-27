@@ -16,7 +16,7 @@
 * under the License.
 */
 
-package org.wso2.carbon.identity.gateway.mediators.inbound.dispatcher;
+package org.wso2.carbon.identity.gateway.mediators.message.dispatcher;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,9 +33,9 @@ import org.wso2.carbon.messaging.CarbonMessage;
 /**
  * Simple Inbound Message Dispatcher Implementation.
  */
-public class InboundMessageDispatcher extends AbstractMediator {
+public class MessageDispatcher extends AbstractMediator {
 
-    private static final Logger log = LoggerFactory.getLogger(InboundMessageDispatcher.class);
+    private static final Logger log = LoggerFactory.getLogger(MessageDispatcher.class);
 
     private String integrationKey;
     private String messageKey;
@@ -48,7 +48,7 @@ public class InboundMessageDispatcher extends AbstractMediator {
 
     @Override
     public String getName() {
-        return "InboundMessageDispatcher";
+        return "MessageDispatcher";
     }
 
     /**
@@ -62,7 +62,7 @@ public class InboundMessageDispatcher extends AbstractMediator {
      **/
     @Override
     public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) throws Exception {
-        log.info("Invoking InboundMessageDispatcher Mediator");
+        log.info("Invoking MessageDispatcher Mediator");
 
         CarbonMessage inputCarbonMessage = (CarbonMessage) getObjectFromContext(carbonMessage, messageKey);
         if (inputCarbonMessage == null) {

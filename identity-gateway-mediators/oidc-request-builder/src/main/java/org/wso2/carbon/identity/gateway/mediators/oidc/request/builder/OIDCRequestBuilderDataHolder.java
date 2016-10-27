@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.wso2.carbon.identity.gateway.inbound.dispatcher.mediators.oidc.request.builder;
+package org.wso2.carbon.identity.gateway.mediators.oidc.request.builder;
 
 import org.wso2.identity.bus.framework.AuthenticationContext;
 

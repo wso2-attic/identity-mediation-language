@@ -16,7 +16,7 @@
 * under the License.
 */
 
-package org.wso2.carbon.identity.gateway.inbound.dispatcher.meditors.common.callback;
+package org.wso2.carbon.identity.gateway.meditors.common.callback;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;

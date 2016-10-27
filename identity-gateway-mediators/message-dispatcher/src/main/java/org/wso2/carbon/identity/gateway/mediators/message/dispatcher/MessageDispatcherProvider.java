@@ -16,7 +16,7 @@
 * under the License.
 */
 
-package org.wso2.carbon.identity.gateway.mediators.inbound.dispatcher;
+package org.wso2.carbon.identity.gateway.mediators.message.dispatcher;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
@@ -28,11 +28,11 @@ import org.wso2.carbon.gateway.core.flow.MediatorProvider;
  * Mediator Provider Implementation
  */
 @Component(
-        name = "InboundMessageDispatcherProvider",
+        name = "MessageDispatcherProvider",
         immediate = true,
         service = MediatorProvider.class
 )
-public class InboundMessageDispatcherProvider implements MediatorProvider {
+public class MessageDispatcherProvider implements MediatorProvider {
 
     @Activate
     protected void start(BundleContext bundleContext) {
@@ -40,12 +40,12 @@ public class InboundMessageDispatcherProvider implements MediatorProvider {
 
     @Override
     public String getName() {
-        return "InboundMessageDispatcher";
+        return "MessageDispatcher";
     }
 
     @Override
     public Mediator getMediator() {
-        return new InboundMessageDispatcher();
+        return new MessageDispatcher();
     }
 
 }

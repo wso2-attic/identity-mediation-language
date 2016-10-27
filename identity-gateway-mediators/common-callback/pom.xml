@@ -74,14 +74,17 @@
 
     <properties>
         <export.package>
-            org.wso2.carbon.identity.gateway,
-            org.wso2.carbon.identity.gateway.builder
+            org.wso2.carbon.identity.gateway.mediators.common.callback,
         </export.package>
         <import.package>
             org.osgi.framework.*;version="${osgi.framework.import.version.range}",
             org.wso2.carbon.gateway.core.*,
             org.slf4j.*;version="${slf4j.logging.package.import.version.range}",
         </import.package>
+        <carbon.component>
+            osgi.service;
+            objectClass="org.wso2.carbon.gateway.core.flow.MediatorProvider";requiredByComponentName="mediator-provider"
+        </carbon.component>
     </properties>
 
 </project>

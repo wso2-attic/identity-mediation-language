@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.wso2.carbon.identity.gateway.meditors.common.callback.mediators.authentication.response.processor;
+package org.wso2.carbon.identity.gateway.mediators.authentication.response.processor;
 
 import org.wso2.identity.bus.framework.AuthenticationContext;
 

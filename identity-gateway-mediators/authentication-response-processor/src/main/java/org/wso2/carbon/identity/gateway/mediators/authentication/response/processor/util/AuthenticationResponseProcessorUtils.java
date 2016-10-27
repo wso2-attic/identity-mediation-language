@@ -1,4 +1,4 @@
-package org.wso2.carbon.identity.gateway.meditors.common.callback.mediators.authentication.response.processor.util;
+package org.wso2.carbon.identity.gateway.mediators.authentication.response.processor.util;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;

@@ -16,7 +16,7 @@
 * under the License.
 */
 
-package org.wso2.carbon.identity.gateway.inbound.dispatcher.mediators.oidc.request.builder;
+package org.wso2.carbon.identity.gateway.mediators.oidc.request.builder;
 
 import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.Scope;

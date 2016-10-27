@@ -16,13 +16,13 @@
 * under the License.
 */
 
-package org.wso2.carbon.gateway.mediators.authentication.request.builder;
+package org.wso2.carbon.identity.gateway.mediators.authentication.request.builder;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.carbon.gateway.core.config.ParameterHolder;
 import org.wso2.carbon.gateway.core.flow.AbstractMediator;
-import org.wso2.carbon.identity.gateway.inbound.dispatcher.meditors.common.callback.mediators.authentication.request.builder.util.AuthenticationRequestBuilderUtils;
+import org.wso2.carbon.identity.gateway.mediators.authentication.request.builder.util.AuthenticationRequestBuilderUtils;
 import org.wso2.carbon.messaging.CarbonCallback;
 import org.wso2.carbon.messaging.CarbonMessage;
 import org.wso2.carbon.messaging.Constants;
