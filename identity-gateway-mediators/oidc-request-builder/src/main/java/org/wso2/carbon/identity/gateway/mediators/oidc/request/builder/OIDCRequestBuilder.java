@@ -49,16 +49,21 @@ import static org.wso2.carbon.gateway.core.Constants.RETURN_VALUE;
 public class OIDCRequestBuilder extends AbstractMediator {
 
     private static final Logger log = LoggerFactory.getLogger(OIDCRequestBuilder.class);
+
     private static final String PROPERTY_TOKEN_ENDPOINT = "tokenep";
     private static final String PROPERTY_CALLBACK_URL = "callbackurl";
     private static final String PROPERTY_CLIENT_ID = "clientid";
     private static final String PROPERTY_SCOPE = "scope";
+    private static final String PROPERTY_RESPONSE_TYPE = "responseType";
 
-    private String logMessage = "Message received at Sample Mediator";
+    private static final String ID_TOKEN = "id_token";
+    private static final String CODE = "code";
+
+    private static final Charset UTF_8 = StandardCharsets.UTF_8;
+
     private Map<String, String> parameters = new HashMap<>();
     private String messageRef;
 
-    private static final Charset UTF_8 = StandardCharsets.UTF_8;
 
     @Override
     public String getName() {
@@ -87,19 +92,23 @@ public class OIDCRequestBuilder extends AbstractMediator {
         }
 
         ResponseType responseType = new ResponseType();
-        responseType.add(OIDCResponseTypeValue.ID_TOKEN);
-        //responseType.add(ResponseType.Value.TOKEN);
+        // create response type based on param set in config
+        if (CODE.equals(parameters.get(PROPERTY_RESPONSE_TYPE))) {
+            responseType.add(ResponseType.Value.CODE);
+        } else {
+            responseType.add(OIDCResponseTypeValue.ID_TOKEN);
+        }
 
+        // OIDC scope string
         Scope scope = Scope.parse(parameters.get(PROPERTY_SCOPE));
 
         String encodedClientID = parameters.get(PROPERTY_CLIENT_ID);
         String decodedClientID = new String(Base64.getDecoder().decode(encodedClientID.getBytes(UTF_8)), UTF_8);
-
         ClientID clientID = new ClientID(decodedClientID);
-        String sessionID = (String) inputCarbonMessage.getProperty("sessionID");
 
+        String sessionID = (String) inputCarbonMessage.getProperty("sessionID");
         if (sessionID == null || sessionID.isEmpty()) {
-            log.error("No session details found.");
+            log.error("Session ID not found in the message to build the OIDC request.");
             return false;
         }
 
@@ -111,12 +120,9 @@ public class OIDCRequestBuilder extends AbstractMediator {
 
         AuthenticationRequest authenticationRequest = new AuthenticationRequest(tokenEP, responseType, scope, clientID,
                 callback, state, nonce);
+
         inputCarbonMessage.setProperty(HTTP_STATUS_CODE, 302);
         inputCarbonMessage.setHeader("Location", authenticationRequest.toURI().toASCIIString());
-
-        //TODO: FIGURE THI OUT!!
-//      SAMLtoOIDCDSL.authenticationContextMap.put(sessionID, (AuthenticationContext) carbonMessage.
-//              getProperty("authenticationContext"));
 
         setObjectToContext(carbonMessage, getReturnedOutput(), inputCarbonMessage);
         return next(carbonMessage, carbonCallback);
@@ -146,14 +152,5 @@ public class OIDCRequestBuilder extends AbstractMediator {
             returnedOutput = parameterHolder.getParameter(RETURN_VALUE).getValue();
         }
     }
-
-
-    /**
-     * This is a sample mediator specific method
-     */
-    public void setLogMessage(String logMessage) {
-        this.logMessage = logMessage;
-    }
-
 
 }

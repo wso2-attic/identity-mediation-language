@@ -60,13 +60,14 @@ import static org.wso2.carbon.gateway.core.Constants.SERVICE_METHOD;
 public class OIDCResponseProcessor extends AbstractMediator {
 
     private static final Logger log = LoggerFactory.getLogger(OIDCResponseProcessor.class);
+
     private static final String PROPERTY_IS_SUBJECT = "isSubject";
     private static final String PROPERTY_SUBJECT_CLAIM = "subjectClaim";
     private static final String PROPERTY_IS_ATTRIBUTE = "isAttribute";
-    private String logMessage = "Message received at Sample Mediator";   // Sample Mediator specific variable
-    private Map<String, String> parameters = new HashMap<>();
 
     private static final Charset UTF_8 = StandardCharsets.UTF_8;
+
+    private Map<String, String> parameters = new HashMap<>();
     private String messageRef;
 
 

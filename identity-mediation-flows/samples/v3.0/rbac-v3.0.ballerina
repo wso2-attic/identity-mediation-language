@@ -37,11 +37,17 @@ resource localauth (message m) {
 	m = AuthenticationResponseProcessor(messageRef=m, parameters="isSubject=true,subjectClaim=username,isAttribute=true");
 
     if (eval(messageRef=m, path="$header.isAuthenticated") == "true") {
-		// send to saml response building.
-		MessageDispatcher(messageRef=m, resourceName=oidcRequest);
+        	// Role based authentication levels : If admin you need to go the extra mile to prove it.
+        	if (eval(messageRef=m, path="$header.role") == "admin") {
+        	    // proceed to OIDC authentication from Google.
+                MessageDispatcher(messageRef=m, resourceName=oidcRequest);
+        	} else {
+        	    // Go to build the SAML response happily.
+        	    MessageDispatcher(messageRef=m, resourceName=response);
+        	}
 	} else {
-		// send back to authenticate.
-		MessageDispatcher(messageRef=m, resourceName=authenticate);
+		    // send back to authenticate again.
+		    MessageDispatcher(messageRef=m, resourceName=authenticate);
 	}
 }
 
@@ -57,7 +63,7 @@ resource oidcRequest (message m) {
                                  clientid= MzAxMDY1MjUwMTM0LXRsdXE0cHBkYTEyNGxscHMyN3F1bTlsc203dXZqNG5wLmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29t"
                              );
 
-     // redirect to google login page
+     // send oidc request via browser
      reply m;
 
 }
@@ -66,7 +72,7 @@ resource oidcRequest (message m) {
 @GET
 @Path ("/oidc")
 resource oidc (message m) {
-	// process the OIDC response
+	// process the OIDC response from google
 	m = OIDCResponseProcessor(
                                     messageRef=m,
                                     parameters="isSubject=true,
