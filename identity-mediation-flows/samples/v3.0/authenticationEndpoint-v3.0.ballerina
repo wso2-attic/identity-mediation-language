@@ -1,0 +1,15 @@
+@Path ("/authenticate")
+@Source (interface="default")
+
+
+package org.wso2.iml.auth;
+
+@GET
+@POST
+@Path("/")
+resource authenticationEndpoint (message m) {
+	// callback url is passes to the mediator as a param
+	m = AuthenticationEndpoint(messageRef=m, parameters="callbackurl=http://localhost:8290/travelocity/localauth");
+
+	reply m;
+}
