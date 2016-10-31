@@ -1,0 +1,96 @@
+@Path ("/travelocity")
+@Source (interface="default")
+package org.wso2.travelocity;
+
+
+@POST
+@Path ("/saml")
+resource saml (message m) {
+	// validate SAML request and create an authentication context
+	m = SAMLRequestProcessor(messageRef=m);
+
+	// invoke the authentication sequence.
+	MessageDispatcher(messageRef=m, resourceName=authenticate);
+}
+
+
+@POST
+@Path ("/auth")
+resource authenticate (message m) {
+	// build Authentication request to be send to the authenticationEndpoint
+	m = AuthenticationRequestBuilder(
+	                                    messageRef=m,
+	                                    parameters="authep=http://localhost:8290/authenticate/,callbackURL=http://localhost:8290/travelocity/localauth"
+	                                );
+
+	// send the request to browser --> redirect to login page
+	reply m;
+}
+
+
+
+@POST
+@Path ("/localauth")
+resource localauth (message m) {
+
+	// process localauth response
+	m = AuthenticationResponseProcessor(messageRef=m, parameters="isSubject=true,subjectClaim=username,isAttribute=true");
+
+    if (eval(messageRef=m, path="$header.isAuthenticated") == "true") {
+		// send to saml response building.
+		MessageDispatcher(messageRef=m, resourceName=oidcRequest);
+	} else {
+		// send back to authenticate.
+		MessageDispatcher(messageRef=m, resourceName=authenticate);
+	}
+	reply m; 	
+}
+
+@POST
+@Path ("/fedauth")
+resource oidcRequest (message m) {
+     // send OIDC requst to federated IDP
+     m  = OIDCRequestBuilder(
+                                 messageRef=m,
+                                 parameters="scope=openid email profile,
+                                 tokenep=https://accounts.google.com/o/oauth2/v2/auth,
+                                 callbackurl=http://ibus.wso2.com:8290/travelocity/oidc,
+                                 clientid= MzAxMDY1MjUwMTM0LXRsdXE0cHBkYTEyNGxscHMyN3F1bTlsc203dXZqNG5wLmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29t"
+                             );
+
+     // redirect to google login page
+     reply m;
+
+}
+
+@POST
+@GET
+@Path ("/oidc")
+resource oidc (message m) {
+	// process the OIDC response
+	m = OIDCResponseProcessor(
+                                    messageRef=m,
+                                    parameters="isSubject=true,
+                                    subjectClaim=email,
+                                    isAttribute=true"
+	                         );
+
+    if (eval(messageRef=m, path="$header.isOIDCResponse") == "false") {
+        reply m;
+	} else {
+		MessageDispatcher(messageRef=m, resourceName=response);
+    }
+}
+
+
+@POST
+@Path ("/response")
+resource response (message m) {
+		// build SAML response for successfull authentication
+		m = SAMLResponseBuilder(
+                                    messageRef=m,
+                                    acsURL="http://localhost:8080/travelocity.com/home.jsp"
+                                );
+
+		reply m;
+}

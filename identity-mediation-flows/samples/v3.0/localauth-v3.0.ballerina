@@ -1,0 +1,56 @@
+@Path ("/travelocity")
+@Source (interface="default")
+package org.wso2.travelocity;
+
+@POST
+@Path ("/saml")
+resource saml (message m) {
+	// validate SAML request and create an authentication context
+	m = SAMLRequestProcessor(messageRef=m);
+	
+	// invoke the authentication sequence.	
+	MessageDispatcher(messageRef=m, resourceName=authenticate);
+}
+
+@POST
+@Path ("/auth")
+resource authenticate (message m) {
+	// build Authentication request to be send to the authenticationEndpoint
+	m = AuthenticationRequestBuilder(
+	                                    messageRef=m,
+	                                    parameters="authep=http://localhost:8290/authenticate/,
+	                                    callbackURL=http://localhost:8290/travelocity/localauth"
+	                                );
+
+	// send the request to browser --> redirect to login page	
+	reply m;
+}
+
+
+@POST
+@Path ("/localauth")
+resource localauth (message m) {
+	// process localauth response	
+	m = AuthenticationResponseProcessor(messageRef=m, parameters="isSubject=true,subjectClaim=username,isAttribute=true");
+
+	if (eval(messageRef=m, path="$header.isAuthenticated") == "true") {
+		// send to saml response building.			
+		MessageDispatcher(messageRef=m, resourceName=response); // we need a way to pass messages to internal resources.
+	} else {
+		// send back to authenticate.
+		MessageDispatcher(messageRef=m, resourceName=authenticate); // we need a way to pass messages to internal resources.
+	}
+}
+
+
+@POST
+@Path ("/response")
+resource response (message m) {
+		// build SAML response for successfull authentication		
+		m = SAMLResponseBuilder(
+                                    messageRef=m,
+                                    acsURL="http://localhost:8080/travelocity.com/home.jsp"
+                                );
+
+		reply m;
+} 

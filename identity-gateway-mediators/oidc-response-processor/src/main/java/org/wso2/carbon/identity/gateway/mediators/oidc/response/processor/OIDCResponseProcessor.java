@@ -39,9 +39,16 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
+import static org.wso2.carbon.gateway.core.Constants.GZIP;
+import static org.wso2.carbon.gateway.core.Constants.HTTP_CONNECTION;
+import static org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_ENCODING;
 import static org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_LENGTH;
+import static org.wso2.carbon.gateway.core.Constants.HTTP_CONTENT_TYPE;
+import static org.wso2.carbon.gateway.core.Constants.HTTP_STATUS_CODE;
+import static org.wso2.carbon.gateway.core.Constants.KEEP_ALIVE;
 import static org.wso2.carbon.gateway.core.Constants.MESSAGE_KEY;
 import static org.wso2.carbon.gateway.core.Constants.RETURN_VALUE;
 import static org.wso2.carbon.gateway.core.Constants.SERVICE_METHOD;
@@ -80,9 +87,7 @@ public class OIDCResponseProcessor extends AbstractMediator {
     @Override
     public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) throws Exception {
 
-        if (log.isDebugEnabled()) {
-            log.debug("Message received at " + getName());
-        }
+        log.info("Message Received at " + getName());
 
         CarbonMessage inputCarbonMessage = (CarbonMessage) getObjectFromContext(carbonMessage, messageRef);
         if (inputCarbonMessage == null) {
@@ -111,9 +116,38 @@ public class OIDCResponseProcessor extends AbstractMediator {
                 state = queryPairMap.get("state");
 
             } catch (ParseException e) {
-                // log error and throw to NEL.
-                log.error("Error parsing the OIDC response recieved to " + getName());
-                return false;
+
+                URI uri = new URI(
+                        inputCarbonMessage.getProperty(Constants.PROTOCOL).toString().toLowerCase(Locale.getDefault()),
+                        null,
+                        inputCarbonMessage.getProperty(Constants.HOST).toString(),
+                        Integer.parseInt(inputCarbonMessage.getProperty(Constants.LISTENER_PORT).toString()),
+                        inputCarbonMessage.getProperty(Constants.TO).toString(),
+                        null,
+                        null);
+
+                String response = getJavascript(uri.toASCIIString());
+                oidcResponseMessage.setStringMessageBody(response);
+
+                int contentLength = response.getBytes(UTF_8).length;
+
+                Map<String, String> transportHeaders = new HashMap<>();
+                transportHeaders.put(HTTP_CONNECTION, KEEP_ALIVE);
+                transportHeaders.put(HTTP_CONTENT_ENCODING, GZIP);
+                transportHeaders.put(HTTP_CONTENT_TYPE, "text/html");
+                transportHeaders.put(HTTP_CONTENT_LENGTH, (String.valueOf(contentLength)));
+
+                oidcResponseMessage.setHeaders(transportHeaders);
+                // TODO : remove this
+                oidcResponseMessage.setHeader("isOIDCResponse", "false");
+
+                oidcResponseMessage.setProperty(HTTP_STATUS_CODE, 200);
+                oidcResponseMessage.setProperty(Constants.DIRECTION, Constants.DIRECTION_RESPONSE);
+                oidcResponseMessage.setProperty(Constants.CALL_BACK, carbonCallback);
+
+                setObjectToContext(carbonMessage, getReturnedOutput(), oidcResponseMessage);
+                return next(carbonMessage, carbonCallback);
+
             }
         } else if (inputCarbonMessage.getProperty(SERVICE_METHOD).equals("POST")) {
 
@@ -219,12 +253,28 @@ public class OIDCResponseProcessor extends AbstractMediator {
         }
     }
 
+    private static String getJavascript(String callbackURL) {
 
-    /**
-     * This is a sample mediator specific method
-     */
-    public void setLogMessage(String logMessage) {
-        this.logMessage = logMessage;
+        return "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3" +
+                ".org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n" +
+                "\n" +
+                "<html>\n" +
+                "    <head>\n" +
+                "        <title></title>\n" +
+                "    </head>\n" +
+                "    <body>\n" +
+                "        <p>You are now redirected to $url If the redirection fails, please click the " +
+                "post button.</p>\n" +
+                "        <form action='" + callbackURL + "' method='post'>\n" +
+                "            <p><input name='fragment' id='id_token' type='hidden' value=''> <button " +
+                "type='submit'>POST</button></p>\n" +
+                "        </form>\n" +
+                "        <script type='text/javascript'>\n" +
+                "            document.getElementById('id_token').value = window.location.hash.substring" +
+                "(1);\n" +
+                "            document.forms[0].submit();\n" +
+                "        </script>\n" +
+                "    </body>\n" +
+                "</html>";
     }
-
 }
