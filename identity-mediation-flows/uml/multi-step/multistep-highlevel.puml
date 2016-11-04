@@ -1,0 +1,43 @@
+@startuml
+participant user_agent
+participant service_provider
+
+box "Identity Gateway" #LightBlue
+participant "http_inbound:\n/travelocity" as sp_inbound
+participant "authentication \nendpoint" as auth_endpoint
+end box
+participant oidc_fidp
+
+
+
+
+user_agent -> service_provider : Access resource
+service_provider -> user_agent : [302] Redirects to bus\nwith SAML login request
+user_agent -> sp_inbound : Follows redirect with SAML login request
+hnote over sp_inbound : SAML request processor
+hnote over sp_inbound : Authentication request\nbuilder
+
+sp_inbound -> user_agent : [302] Redirects to authentication endpoint
+user_agent -> auth_endpoint : \t\t\tFollows redirect
+auth_endpoint -> user_agent : \t\t\tGet Login Page
+
+auth_endpoint <--> user_agent : \t\t\tUser authentication
+user_agent -> sp_inbound : [POST] Authentication Response
+hnote over sp_inbound : Authentication response\nprocessor
+hnote over sp_inbound : OIDC request builder
+
+sp_inbound -> user_agent : [302] Redirect to IDP
+user_agent -> oidc_fidp : Follows redirect: GET /authorize [Implicit]
+
+oidc_fidp <--> user_agent : User authentication
+oidc_fidp -> user_agent : [302]Redirects to /travelocity with ID token
+user_agent -> sp_inbound : Follows redirect with ID token
+hnote over sp_inbound : OIDC response processor
+hnote over sp_inbound : SAML response builder
+
+sp_inbound -> user_agent : [200]SAML response in HTML from
+user_agent -> service_provider : POST SAML response
+service_provider -> user_agent : Supply resource
+
+@enduml
+

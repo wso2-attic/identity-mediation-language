@@ -20,7 +20,6 @@ package org.wso2.carbon.identity.gateway.mediators.oidc.response.processor;
 
 import com.nimbusds.jwt.ReadOnlyJWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
-import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,14 +32,17 @@ import org.wso2.carbon.messaging.DefaultCarbonMessage;
 import org.wso2.identity.bus.framework.AuthenticationContext;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.wso2.carbon.gateway.core.Constants.GZIP;
 import static org.wso2.carbon.gateway.core.Constants.HTTP_CONNECTION;
@@ -99,25 +101,30 @@ public class OIDCResponseProcessor extends AbstractMediator {
         DefaultCarbonMessage oidcResponseMessage = new DefaultCarbonMessage();
         String state;
 
+        /*
+            Here we get the intermediate response from the authorization server. If it is the code flow, we get the
+            authorization code in the response. If it is the implicit flow we get the id_token as a url fragment. In
+            the case of id_token sent in URL fragment we use JavaScript to POST the fragment back to this response
+            processor to consume the id_token
+         */
         if (inputCarbonMessage.getProperty(SERVICE_METHOD).equals("GET")) {
-            try {
-                successResponse = AuthenticationSuccessResponse.parse(new URI((String) inputCarbonMessage.getProperty
-                        (Constants.TO)));
-                Map<String, String> queryPairMap = new HashMap<>();
-                URI uri = new URI((String) inputCarbonMessage.getProperty(Constants.TO));
-                String query = uri.getQuery();
-                String[] pairs = query.split("&");
 
-                for (String pair : pairs) {
-                    int idx = pair.indexOf("=");
-                    queryPairMap.put(URLDecoder.decode(pair.substring(0, idx), UTF_8.name()),
-                            URLDecoder.decode(pair.substring(idx + 1), UTF_8.name()));
-                }
+            String responseURI = (String) inputCarbonMessage.getProperty(Constants.TO);
 
-                state = queryPairMap.get("state");
+            // handle authorization code flow
+            if (isAuthorizationCodeFlow(responseURI)) {
+                successResponse = AuthenticationSuccessResponse.parse(new URI(responseURI));
 
-            } catch (ParseException e) {
+                // authorization code sent by the IDP
+                String authorizationCode = successResponse.getAuthorizationCode().getValue();
+                state = successResponse.getState().getValue();
 
+                oidcResponseMessage.setProperty("authorizationCode", authorizationCode);
+                oidcResponseMessage.setProperty("state", state);
+
+                oidcResponseMessage.setHeader("AUTHZ_CODE_RESPONSE", "true");
+
+            } else { // handle implicit flow
                 URI uri = new URI(
                         inputCarbonMessage.getProperty(Constants.PROTOCOL).toString().toLowerCase(Locale.getDefault()),
                         null,
@@ -131,27 +138,30 @@ public class OIDCResponseProcessor extends AbstractMediator {
                 oidcResponseMessage.setStringMessageBody(response);
 
                 int contentLength = response.getBytes(UTF_8).length;
+                oidcResponseMessage.setHeader(HTTP_CONTENT_LENGTH, (String.valueOf(contentLength)));
 
-                Map<String, String> transportHeaders = new HashMap<>();
-                transportHeaders.put(HTTP_CONNECTION, KEEP_ALIVE);
-                transportHeaders.put(HTTP_CONTENT_ENCODING, GZIP);
-                transportHeaders.put(HTTP_CONTENT_TYPE, "text/html");
-                transportHeaders.put(HTTP_CONTENT_LENGTH, (String.valueOf(contentLength)));
-
-                oidcResponseMessage.setHeaders(transportHeaders);
                 // TODO : remove this
-                oidcResponseMessage.setHeader("isOIDCResponse", "false");
-
-                oidcResponseMessage.setProperty(HTTP_STATUS_CODE, 200);
-                oidcResponseMessage.setProperty(Constants.DIRECTION, Constants.DIRECTION_RESPONSE);
-                oidcResponseMessage.setProperty(Constants.CALL_BACK, carbonCallback);
-
-                setObjectToContext(carbonMessage, getReturnedOutput(), oidcResponseMessage);
-                return next(carbonMessage, carbonCallback);
-
+                oidcResponseMessage.setHeader("URL_FRAGMENT_TO_POST", "true");
             }
-        } else if (inputCarbonMessage.getProperty(SERVICE_METHOD).equals("POST")) {
 
+            // set common transport headers
+            Map<String, String> transportHeaders = new HashMap<>();
+            transportHeaders.put(HTTP_CONNECTION, KEEP_ALIVE);
+            transportHeaders.put(HTTP_CONTENT_ENCODING, GZIP);
+            transportHeaders.put(HTTP_CONTENT_TYPE, "text/html");
+            oidcResponseMessage.setHeaders(transportHeaders);
+
+            oidcResponseMessage.setProperty(HTTP_STATUS_CODE, 200);
+            oidcResponseMessage.setProperty(Constants.DIRECTION, Constants.DIRECTION_RESPONSE);
+            oidcResponseMessage.setProperty(Constants.CALL_BACK, carbonCallback);
+
+            setObjectToContext(carbonMessage, getReturnedOutput(), oidcResponseMessage);
+            return next(carbonMessage, carbonCallback);
+
+        } else if (inputCarbonMessage.getProperty(SERVICE_METHOD).equals("POST")) {
+             /*
+                We handle the token response here.
+            */
             String contentLength = inputCarbonMessage.getHeader(HTTP_CONTENT_LENGTH);
             byte[] bytes = new byte[Integer.parseInt(contentLength)];
 
@@ -277,5 +287,14 @@ public class OIDCResponseProcessor extends AbstractMediator {
                 "        </script>\n" +
                 "    </body>\n" +
                 "</html>";
+    }
+
+
+    private boolean isAuthorizationCodeFlow(String responseURI) throws URISyntaxException {
+        URI uri = new URI(responseURI);
+        Optional<String> query = Optional.ofNullable(uri.getQuery());
+
+        // check whether there is a query param in the form code=<authz_code>
+        return (Arrays.stream(query.orElse("").split("&"))).filter(x -> x.startsWith("code=")).count() > 0;
     }
 }

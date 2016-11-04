@@ -37,6 +37,7 @@ resource localauth (message m) {
 	m = AuthenticationResponseProcessor(messageRef=m, parameters="isSubject=true,subjectClaim=username,isAttribute=true");
 
     if (eval(messageRef=m, path="$header.isAuthenticated") == "true") {
+
         	// Role based authentication levels : If admin you need to go the extra mile to prove it.
         	if (eval(messageRef=m, path="$header.role") == "admin") {
         	    // proceed to OIDC authentication from Google.
@@ -45,6 +46,7 @@ resource localauth (message m) {
         	    // Go to build the SAML response happily.
         	    MessageDispatcher(messageRef=m, resourceName=response);
         	}
+
 	} else {
 		    // send back to authenticate again.
 		    MessageDispatcher(messageRef=m, resourceName=authenticate);
@@ -58,9 +60,9 @@ resource oidcRequest (message m) {
      m  = OIDCRequestBuilder(
                                  messageRef=m,
                                  parameters="scope=openid email profile,
-                                 tokenep=https://accounts.google.com/o/oauth2/v2/auth,
-                                 callbackurl=http://ibus.wso2.com:8290/travelocity/oidc,
-                                 clientid= MzAxMDY1MjUwMTM0LXRsdXE0cHBkYTEyNGxscHMyN3F1bTlsc203dXZqNG5wLmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29t"
+                                 authzEP=https://accounts.google.com/o/oauth2/v2/auth,
+                                 callbackURL=http://ibus.wso2.com:8290/travelocity/oidc,
+                                 clientID=MzAxMDY1MjUwMTM0LXRsdXE0cHBkYTEyNGxscHMyN3F1bTlsc203dXZqNG5wLmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29t"
                              );
 
      // send oidc request via browser
@@ -80,7 +82,7 @@ resource oidc (message m) {
                                     isAttribute=true"
 	                         );
 
-    if (eval(messageRef=m, path="$header.isOIDCResponse") == "false") {
+    if (eval(messageRef=m, path="$header.URL_FRAGMENT_TO_POST") == "true") {
         reply m;
 	} else {
 		MessageDispatcher(messageRef=m, resourceName=response);

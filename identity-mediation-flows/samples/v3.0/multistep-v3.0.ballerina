@@ -20,7 +20,9 @@ resource authenticate (message m) {
 	// build Authentication request to be send to the authenticationEndpoint
 	m = AuthenticationRequestBuilder(
 	                                    messageRef=m,
-	                                    parameters="authep=http://localhost:8290/authenticate/,callbackURL=http://localhost:8290/travelocity/localauth"
+	                                    parameters="
+	                                    authep=http://localhost:8290/authenticate/,
+	                                    callbackURL=http://localhost:8290/travelocity/localauth"
 	                                );
 
 	// send the request to browser --> redirect to login page
@@ -34,7 +36,13 @@ resource authenticate (message m) {
 resource localauth (message m) {
 
 	// process localauth response
-	m = AuthenticationResponseProcessor(messageRef=m, parameters="isSubject=true,subjectClaim=username,isAttribute=true");
+	m = AuthenticationResponseProcessor(
+                                messageRef=m,
+                                parameters="
+                                isSubject=true,
+                                subjectClaim=username,
+                                isAttribute=true"
+                                );
 
     if (eval(messageRef=m, path="$header.isAuthenticated") == "true") {
 		// send to saml response building.
@@ -51,10 +59,11 @@ resource oidcRequest (message m) {
      // send OIDC requst to federated IDP
      m  = OIDCRequestBuilder(
                                  messageRef=m,
-                                 parameters="scope=openid email profile,
-                                 tokenep=https://accounts.google.com/o/oauth2/v2/auth,
-                                 callbackurl=http://ibus.wso2.com:8290/travelocity/oidc,
-                                 clientid= MzAxMDY1MjUwMTM0LXRsdXE0cHBkYTEyNGxscHMyN3F1bTlsc203dXZqNG5wLmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29t"
+                                 parameters="
+                                 scope=openid email profile,
+                                 authzEP=https://accounts.google.com/o/oauth2/v2/auth,
+                                 callbackURL=http://ibus.wso2.com:8290/travelocity/oidc,
+                                 clientID=NjY1NTYxMjk3NjE1LTlwaHNvODA5bWg4MHNsMm1kdXFnb3JzaTJ0ZWhjbW1jLmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29t"
                              );
 
      // redirect to google login page
@@ -74,7 +83,7 @@ resource oidc (message m) {
                                     isAttribute=true"
 	                         );
 
-    if (eval(messageRef=m, path="$header.isOIDCResponse") == "false") {
+    if (eval(messageRef=m, path="$header.URL_FRAGMENT_TO_POST") == "true") {
         reply m;
 	} else {
 		MessageDispatcher(messageRef=m, resourceName=response);

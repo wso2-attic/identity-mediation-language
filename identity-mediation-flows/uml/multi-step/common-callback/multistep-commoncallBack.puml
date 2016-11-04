@@ -1,11 +1,15 @@
 @startuml
 participant user_agent
 participant service_provider
+
+box "Identity Gateway"
+participant "http_inbound:\n/commonCallback" as commonCallBackEP
 participant "http_inbound:\n/travelocity" as http_inbound_travelocity
 participant "sequence:\n/travelocity/saml " as sequence_1
 participant "sequence:\n/travelocity/localAuth  " as sequence_2
 participant "sequence:\n/travelocity/oidc " as sequence_3
 participant "authentication \nendpoint" as auth_endpoint
+end box
 participant oidc_fidp
 
 
@@ -19,22 +23,26 @@ hnote over sequence_1 : Authentication request\nbuilder
 
 sequence_1 -> user_agent : [302] Redirects to authentication endpoint
 user_agent -> auth_endpoint : Follows redirect
+auth_endpoint -> user_agent : \t\t\tGet Login Page
 auth_endpoint <--> user_agent : User authentication
-auth_endpoint -> user_agent : [302] Authentication response
-user_agent -> sequence_2 : [302] Redirects to /travelocity/localAuth \nwith authentication response
+user_agent -> commonCallBackEP : POST authentication response to /commonCallback
+commonCallBackEP -> sequence_2 : forward authentication response to /travelocity/localAuth
 hnote over sequence_2 : Authentication response\nprocessor
 hnote over sequence_2 : OIDC request builder
 
-sequence_2 -> user_agent : [302]Redirects to IDP
+sequence_2 -> commonCallBackEP : [302] Redirects to IDP
+commonCallBackEP -> user_agent : [302]Redirects to IDP
 user_agent -> oidc_fidp : Follows redirect: GET /authorize [Implicit]
 
 oidc_fidp <--> user_agent : User authentication
 oidc_fidp -> user_agent : [302]Redirects to /travelocity with ID token
-user_agent -> sequence_3 : Follows redirect with ID token
+user_agent -> commonCallBackEP : Follows redirect with ID token
+commonCallBackEP -> sequence_3 : forward ID token to /travelocity/oidc sequence
 hnote over sequence_3 : OIDC response processor
 hnote over sequence_3 : SAML response builder
 
-sequence_3 -> user_agent : [200]SAML response in HTML from
+sequence_3 -> commonCallBackEP : [200]SAML response in HTML from
+commonCallBackEP -> user_agent : [200]SAML response in HTML from
 user_agent -> service_provider : POST SAML response
 service_provider -> user_agent : Supply resource
 
