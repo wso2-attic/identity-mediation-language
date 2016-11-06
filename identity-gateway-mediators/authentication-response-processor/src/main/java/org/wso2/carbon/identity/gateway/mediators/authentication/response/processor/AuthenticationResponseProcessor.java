@@ -103,8 +103,8 @@ public class AuthenticationResponseProcessor extends AbstractMediator {
 
         Map<String, String> paramsMap = new HashMap<>();
 
-        for (int i = 0; i < paramsArray.length; i++) {
-            String keyValue[] = paramsArray[i].split("=");
+        for (String aParamsArray : paramsArray) {
+            String keyValue[] = aParamsArray.split("=");
             String key = keyValue[0];
             String value = keyValue.length == 2 ? keyValue[1] : "";
             paramsMap.put(key, value);
@@ -122,11 +122,6 @@ public class AuthenticationResponseProcessor extends AbstractMediator {
             String role = roles.get(0);
             authenticationResponseMessage.setHeader("role", role);
             authenticationResponseMessage.setHeader("isAuthenticated", "true");
-
-            // TODO : remove this after filter mediator is corrected, as of now the filter mediator simply looks at the
-            // carbon message passed to receive method instead of the actual message passed as a variable to it.
-            carbonMessage.setHeader("role", role);
-            carbonMessage.setHeader("isAuthenticated", "true");
 
             AuthenticationContext authenticationContext = AuthenticationResponseProcessorDataHolder.getInstance()
                     .getAuthenticationContext();
@@ -158,10 +153,6 @@ public class AuthenticationResponseProcessor extends AbstractMediator {
             String response = "";
             authenticationResponseMessage.setStringMessageBody(response);
             authenticationResponseMessage.setHeader("isAuthenticated", "false");
-
-            // TODO : remove this after filter mediator is corrected, as of now the filter mediator simply looks at the
-            // carbon message passed to receive method instead of the actual message passed as a variable to it.
-            carbonMessage.setHeader("isAuthenticated", "false");
 
             // TODO : set anything else that is useful for the authentication request builder other mediators.
 //            Map<String, String> transportHeaders = new HashMap<>();

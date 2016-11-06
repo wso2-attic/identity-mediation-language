@@ -35,10 +35,10 @@ resource localauth (message m) {
 
 	if (eval(messageRef=m, path="$header.isAuthenticated") == "true") {
 		// send to saml response building.			
-		MessageDispatcher(messageRef=m, resourceName=response); // we need a way to pass messages to internal resources.
+		MessageDispatcher(messageRef=m, resourceName=response);
 	} else {
 		// send back to authenticate.
-		MessageDispatcher(messageRef=m, resourceName=authenticate); // we need a way to pass messages to internal resources.
+		MessageDispatcher(messageRef=m, resourceName=authenticate);
 	}
 }
 
