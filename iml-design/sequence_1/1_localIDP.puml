@@ -1,0 +1,40 @@
+@startuml
+Title : Inbound SAML with Local IDP
+
+
+participant "SP : ODEL" as SP
+participant "IDP : LOCAL" as IDP
+participant "AUTH : BASIC" as AUTH
+database "US : LDAP" as US_ODEL
+
+
+autonumber
+
+hnote left SP
+SAML
+end hnote
+ -> SP
+activate SP
+SP -> SP : Validate Request
+SP -> IDP : \tAuthenticate
+    activate IDP #lightBlue
+    IDP -> AUTH
+        activate AUTH #Pink
+        AUTH -> US_ODEL : Lookup
+            activate US_ODEL #lightGreen
+            US_ODEL -> AUTH : Lookup Response
+            deactivate US_ODEL
+            AUTH -> IDP
+        deactivate AUTH #Pink
+    IDP -> IDP : Claim Mapping
+    IDP -> SP : Authentication Response
+    deactivate IDP
+SP -> SP : Build Response
+hnote left SP
+SAML
+end hnote
+ <- SP
+deactivate SP
+
+
+@enduml

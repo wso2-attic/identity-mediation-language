@@ -1,0 +1,34 @@
+@startuml
+Title : Inbound SAML with Basic Auth
+
+
+participant "SP : ODEL" as SP
+participant "AUTH : BASIC" as AUTH
+database "US : LDAP" as US_ODEL
+
+
+autonumber
+
+hnote left SP
+SAML
+end hnote
+ -> SP
+activate SP
+SP -> SP : Validate Request
+SP -> AUTH : \tAuthenticate
+            activate AUTH #Pink
+        AUTH -> US_ODEL : Lookup
+        activate US_ODEL #lightGreen
+        US_ODEL -> AUTH : Lookup Response
+        deactivate US_ODEL
+    AUTH -> SP : Authentication Response
+        deactivate AUTH #Pink
+SP -> SP : Build Response
+hnote left SP
+SAML
+end hnote
+ <- SP
+deactivate SP
+
+
+@enduml

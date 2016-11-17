@@ -1,0 +1,33 @@
+@startuml
+Title : Inbound SAML with Facebook login (OIDC federation)
+
+
+participant "SP : ODEL" as SP
+participant "IDP : Facebook" as IDP
+autonumber
+
+hnote left SP
+SAML
+end hnote
+ -> SP
+activate SP
+SP -> SP : Validate Request
+SP -> IDP : \tAuthenticate
+
+activate IDP #lightBlue
+hnote right IDP
+OIDC
+end hnote
+IDP -> IDP : Claim mapping
+
+IDP -> SP : Authentication Response
+deactivate IDP
+SP -> SP : Build Response
+hnote left SP
+SAML
+end hnote
+ <- SP :
+deactivate SP
+
+
+@enduml
