@@ -1,0 +1,47 @@
+@startuml
+Title : Inbound SAML with Multi Option social login
+
+
+participant "SP : ODEL" as SP
+participant "Step : Social Login" as socialLogin
+participant "IDP : Twitter" as twitter
+participant "IDP : Facebook" as facebook
+
+
+hnote left SP
+SAML
+end hnote
+ -> SP
+activate SP
+SP -> SP : Validate Request
+
+SP -> socialLogin
+activate socialLogin #Lightgreen
+
+alt option=twitter
+socialLogin -> twitter
+activate twitter
+twitter -> socialLogin
+deactivate twitter
+
+else option=facebook
+socialLogin -> facebook
+activate facebook
+facebook -> socialLogin
+deactivate facebook
+
+end alt
+
+socialLogin -> SP
+deactivate socialLogin
+
+
+SP -> SP : Build Response
+hnote left SP
+SAML
+end hnote
+ <- SP :
+deactivate SP
+
+
+@enduml
