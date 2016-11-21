@@ -58,7 +58,7 @@ The following scenarios are demonstrated by the samples,
 #### Sample 1 : SAML Single Sign On with authentication with Local IDP.
 
 How to Setup this sample?
-* Copy `authenticationEndpoint-v2.xyz` and `localauth-v2.xyz` into `<iserver_home>/deployment/integration-flows/`
+* Copy `authenticationEndpoint-<version>.xyz` and `localauth-<version>.xyz` into `<iserver_home>/deployment/integration-flows/`
 * Go to http://localhost:8080/travelocity.com/index.jsp
 * Use SAML SSO login with `POST binding` option.
 * Log in using username : admin and password : admin  
@@ -67,7 +67,7 @@ How to Setup this sample?
 #### Sample 2 : SAML Single Sign On with multi-step authentication (Local IDP + OIDC).
 
 How to Setup this sample?
-* Copy `authenticationEndpoint-v2.xyz` and `multistep-v2.xyz` into `<iserver_home>/deployment/integration-flows/`
+* Copy `authenticationEndpoint-<version>.xyz` and `multistep-<version>.xyz` into `<iserver_home>/deployment/integration-flows/`
 * Go to http://localhost:8080/travelocity.com/index.jsp
 * Use SAML SSO login with `POST binding` option.
 * Log in using `username : admin` and `password : admin`  
@@ -77,7 +77,7 @@ How to Setup this sample?
 #### Sample 3 : SAML Single Sign On with authentication multi-step authentication based on user's role.
 
 How to Setup this sample?
-* Copy `authenticationEndpoint-v2.xyz` and `rbac-v2.xyz` into `<iserver_home>/deployment/integration-flows/`
+* Copy `authenticationEndpoint-<version>.xyz` and `rbac-<version>.xyz` into `<iserver_home>/deployment/integration-flows/`
 * Go to http://localhost:8080/travelocity.com/index.jsp
 * Use SAML SSO login with `POST binding` option.
 * In this you can login to in the first step using one of these three accounts
