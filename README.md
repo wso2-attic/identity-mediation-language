@@ -1,3 +1,9 @@
+# This repository is no longer maintained.
+
+Issue reports and pull requests will not be attended.
+
+
+
 # Identity Mediation Language (IML)
 
 ## Setting up the demo
